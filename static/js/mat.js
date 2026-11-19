@@ -133,11 +133,12 @@ viewer.addEventListener('keydown', e => {
 });
 $('#gotoRow').addEventListener('keydown', e => { if (e.key === 'Enter' && sheet) { select(+e.target.value - 1, sel.c); viewer.focus(); } });
 $('#dec').onchange = render;
-$('#csvBtn').onclick = () => {
+const exportCsv = () => {
   if (!sheet) return; const a = $('#rFrom').value, b = $('#rTo').value;
   location.href = `/api/mat/export/${file.id}/${encodeURIComponent(sheet.name)}.csv?` + new URLSearchParams({...(a && {from: a}), ...(b && {to: b})});
 };
-$('#zipBtn').onclick = () => { if (file) location.href = `/api/mat/export-all/${file.id}.zip`; };
+const exportZip = () => { if (file) location.href = `/api/mat/export-all/${file.id}.zip`; };
+$('#exportBtn').onclick = e => UI.menu(e.currentTarget, [{label: 'Current sheet as CSV', hint: 'uses the row range', onClick: exportCsv}, {label: 'All sheets as ZIP of CSV', onClick: exportZip}]);
 
 /* ---------------- chart & statistics panel ---------------- */
 function applyPanel(open) {

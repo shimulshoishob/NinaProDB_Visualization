@@ -203,19 +203,21 @@ $('#jsonModes').onclick = e => { const b = e.target.closest('button'); if (!b) r
 $('#q').oninput = debounce(render, 250);
 $('#q').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); gotoHit(e.shiftKey ? -1 : 1); } };
 $('#qNext').onclick = () => gotoHit(1); $('#qPrev').onclick = () => gotoHit(-1);
+const syncQNav = () => { const on = !!$('#q').value.trim(); $('#qPrev').hidden = $('#qNext').hidden = !on; };
+$('#q').addEventListener('input', () => setTimeout(syncQNav, 0)); $('#jsonModes').addEventListener('click', () => setTimeout(syncQNav, 0));
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'f' && !P.hidden) { e.preventDefault(); $('#q').focus(); $('#q').select(); } });
-$('#expandBtn').onclick = () => {
+const expandAll = () => {
   if (mode !== 'tree') return; let budget = EXPAND_LIMIT;
   const rec = el => { if (budget <= 0 || !el._toggle) return; if (!el._open()) { el._toggle(true); budget--; } [...(el.children[1]?.children || [])].forEach(c => c.classList?.contains('n') && rec(c)); };
   rec($('#body').firstChild); if (budget <= 0) toast('Expanded first ' + EXPAND_LIMIT + ' nodes');
 };
-$('#collapseBtn').onclick = () => { if (mode === 'tree') showTree(''); };
-$('#copyBtn').onclick = () => copyText(JSON.stringify(selected && selected.v !== undefined && !P.hidden && selected ? selected.v : data, null, 2));
-$('#copyBtn').title = 'Copies the selected node (or the whole document if none selected)';
+const collapseAll = () => { if (mode === 'tree') showTree(''); };
+const copyJson = () => copyText(JSON.stringify(selected && selected.v !== undefined && !P.hidden && selected ? selected.v : data, null, 2));
 $('#copyPath').onclick = () => copyText($('#pathText').textContent);
-$('#dlBtn').onclick = e => {
-  if (data === undefined) return;
-  const save = indent => download(fileName.replace(/\.(jsonl|ndjson)$/, '.json'), JSON.stringify(data, null, indent), 'application/json');
-  UI.menu(e.currentTarget, [{label: 'Pretty-printed (readable)', onClick: () => save(2)}, {label: 'Minified (smallest)', onClick: () => save(0)}], {align: 'left'});
-};
+const saveJson = indent => data !== undefined && download(fileName.replace(/\.(jsonl|ndjson)$/, '.json'), JSON.stringify(data, null, indent), 'application/json');
+$('#jsonMore').onclick = e => UI.menu(e.currentTarget, [
+  {label: 'Expand all', hint: 'up to 2000 nodes', onClick: expandAll}, {label: 'Collapse all', onClick: collapseAll},
+  {sep: true}, {label: 'Copy JSON', hint: 'selected node, or all', onClick: copyJson},
+  {sep: true}, {heading: 'Download'}, {label: 'Pretty-printed (readable)', icon: 'download', onClick: () => saveJson(2)}, {label: 'Minified (smallest)', icon: 'download', onClick: () => saveJson(0)},
+]);
 })();

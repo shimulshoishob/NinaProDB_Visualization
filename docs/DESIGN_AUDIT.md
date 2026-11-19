@@ -195,6 +195,13 @@ Transitions, loading skeletons, empty states, friendly error copy, keyboard map,
 | **6 Remaining viewers** | Unified headers and typography | Smoke test; each viewer manually |
 | **7 Polish** | Motion, loading/empty/error states, responsive and accessibility pass | Full QA list: unit tests, `ruff`, `node --check`, smoke test, manual flows (dashboard, browse, PDF render/search/annotate/export, code fold/annotate, notes autosave, theme, shortcuts, backup/restore) |
 
+### Outcome (all phases complete)
+
+All seven phases shipped without a change to any endpoint, table or security rule. Regressions found and fixed on the way:
+code syntax colours (a missing `hl` class), the Markdown admonition (a `.tip` class clash with the new tooltip), and the
+`Esc` key leaving a document while a tool was active. The smoke test now guards each of them (74 checks, light and dark).
+Contrast was verified programmatically on every page and viewer in both themes: no text below 4.5:1.
+
 ### Constraints preserved in every phase
 
 No framework or build step; Flask, SQLite, PDF.js and Pygments stay; no endpoint is removed or changed incompatibly;

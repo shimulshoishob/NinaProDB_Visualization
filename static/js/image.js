@@ -23,14 +23,15 @@ Viewers.image = async f => {
   $('#imgInfo').textContent = `${nat.w} × ${nat.h} px · ${fmtSize(f.size)}`; apply();
 };
 $('#imgIn').onclick = () => setZoom(zoom * 1.25); $('#imgOut').onclick = () => setZoom(zoom / 1.25);
-$('#imgFit').onclick = () => { fit = true; apply(); }; $('#imgActual').onclick = () => setZoom(1);
-$('#imgRotate').onclick = () => { rot = (rot + 90) % 360; apply(); };
+const actual = () => setZoom(1), rotate = () => { rot = (rot + 90) % 360; apply(); };
+$('#imgFit').onclick = () => { fit = true; apply(); };
+$('#imgMore').onclick = e => UI.menu(e.currentTarget, [{label: 'Actual size', hint: '1', onClick: actual}, {label: 'Rotate', hint: 'R', icon: 'rotate', onClick: rotate}]);
 img.ondblclick = () => { if (fit) setZoom(1); else { fit = true; apply(); } };
 stage.addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); setZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1)); } }, {passive: false});
 new ResizeObserver(() => { if (!P.hidden && fit && nat.w) apply(); }).observe(stage);
 document.addEventListener('keydown', e => {
   if (P.hidden || typing() || e.ctrlKey || e.metaKey) return;
   if (e.key === '+' || e.key === '=') $('#imgIn').click(); else if (e.key === '-') $('#imgOut').click();
-  else if (e.key === '0') $('#imgFit').click(); else if (e.key === '1') $('#imgActual').click(); else if (e.key === 'r') $('#imgRotate').click();
+  else if (e.key === '0') $('#imgFit').click(); else if (e.key === '1') actual(); else if (e.key === 'r') rotate();
 });
 })();

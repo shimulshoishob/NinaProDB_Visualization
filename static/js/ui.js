@@ -5,12 +5,12 @@ const UI = (() => {
   const FOCUSABLE = 'button:not(:disabled),[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])';
 
   /* ---------------- dialog ---------------- */
-  function dialog({title, message = '', input = null, confirm = 'OK', cancel = 'Cancel', danger = false}) {
+  function dialog({title, message = '', html = '', input = null, confirm = 'OK', cancel = 'Cancel', danger = false}) {
     return new Promise(resolve => {
       const prev = document.activeElement, id = 'dlg' + Math.random().toString(36).slice(2, 7);
       const scrim = document.createElement('div'); scrim.className = 'dlg-scrim';
       scrim.innerHTML = `<div class="dlg" role="${input ? 'dialog' : 'alertdialog'}" aria-modal="true" aria-labelledby="${id}t" aria-describedby="${id}d">
-        <h2 id="${id}t">${esc(title)}</h2>${message ? `<p id="${id}d">${esc(message)}</p>` : `<p id="${id}d" hidden></p>`}
+        <h2 id="${id}t">${esc(title)}</h2>${html ? `<div id="${id}d" class="dlg-body">${html}</div>` : message ? `<p id="${id}d">${esc(message)}</p>` : `<p id="${id}d" hidden></p>`}
         ${input ? `<input type="${input.password ? 'password' : 'text'}" value="${esc(input.value || '')}" placeholder="${esc(input.placeholder || '')}" aria-label="${esc(input.label || title)}" spellcheck="false">` : ''}
         <div class="acts">${cancel ? `<button class="btn" data-a="cancel">${esc(cancel)}</button>` : ''}<button class="btn primary${danger ? ' danger' : ''}" data-a="ok">${esc(confirm)}</button></div></div>`;
       document.body.appendChild(scrim);
@@ -86,7 +86,7 @@ const UI = (() => {
     const go = () => {
       if (!document.contains(el)) return;
       held = {el, text}; el.removeAttribute('title');
-      tip = document.createElement('div'); tip.className = 'tip'; tip.setAttribute('role', 'tooltip'); tip.textContent = text; document.body.appendChild(tip);
+      tip = document.createElement('div'); tip.className = 'ui-tip'; tip.setAttribute('role', 'tooltip'); tip.textContent = text; document.body.appendChild(tip);
       const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
       let top = r.bottom + 8; if (top + h > innerHeight - 6) top = r.top - h - 8;
       tip.style.top = Math.max(6, top) + 'px'; tip.style.left = Math.max(6, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 6)) + 'px';
@@ -102,5 +102,7 @@ const UI = (() => {
     document.addEventListener('focusout', hideTip);
   }
 
-  return {confirm: confirmDialog, prompt: promptDialog, menu, closeMenu, initTips};
+  const info = (title, html) => dialog({title, html, confirm: 'Close', cancel: ''});
+
+  return {confirm: confirmDialog, prompt: promptDialog, info, menu, closeMenu, initTips};
 })();

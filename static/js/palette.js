@@ -13,6 +13,7 @@ const Palette = {
       {name: 'New note', hint: 'Action', run: async () => { const n = await SA.add('notes', {title: '', body: ''}); App.go('#/notes/' + n.id); }},
       {name: window.Pomodoro && Pomodoro.running() ? 'Pause focus timer' : 'Start focus timer', hint: 'Action', run: () => { Pomodoro.running() ? Pomodoro.pause() : Pomodoro.start(); toast(Pomodoro.running() ? 'Focus timer started' : 'Focus timer paused'); }},
       {name: 'Toggle light / dark theme', hint: 'Action', run: () => Theme.toggle()},
+      {name: 'Keyboard shortcuts', hint: 'Help', run: () => App.showShortcuts()},
       {name: 'Toggle navigation', hint: 'Action', run: () => App.toggleNav()},
       {name: 'Download a backup of my study data', hint: 'Action', run: () => { location.href = '/api/backup'; }},
     ];

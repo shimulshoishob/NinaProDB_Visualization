@@ -47,6 +47,9 @@ for f in static/js/*.js; do node --check "$f"; done      # syntax check of the f
   They run against the real sample files in `data/`.
 * **Documentation tests** (`tests/test_docs.py`) fail if a route is missing from `docs/API.md`, a relative link in the
   Markdown files is broken, or the documented migration count is stale.
+* **Contrast and layout checks** worth repeating after a visual change: run the smoke test in both themes
+  (`Theme.set('dark')` in the console first), and view the dashboard, file browser, a PDF and a code file at phone width
+  (375 px) using the browser's device mode. Text should keep at least 4.5:1 contrast.
 * **Browser smoke test**: start the app, open it in a browser, paste `tests/e2e_smoke.js` into the developer-tools
   console. It checks every page, a file of every type, keyboard shortcuts, accessible names and script errors.
 * Things that need a real person: the print dialog, the native file dialog, full screen, sound, drawing with a real
@@ -73,6 +76,12 @@ for f in static/js/*.js; do node --check "$f"; done      # syntax check of the f
 * No build step and no dependencies. Scripts are plain browser JavaScript (ES2020).
 * Never use `confirm()` / `prompt()`; use `UI.confirm` / `UI.prompt` / `UI.menu` from `ui.js`. Style with the CSS tokens in
   `static/css/base.css` (`var(--accent)`, `--r-md`, `--fs-md`, ...), never with literal colours, so light and dark both work.
+* Never leave a viewer blank or spinning when it fails: **throw** from `Viewers.<name>` and the app shows one shared
+  error state (what happened, Try again, Open with system app, Go back). Slow opens get a shared "Opening…" overlay.
+* Give new class names a prefix or a scope (`#v-name`, `.ui-tip`): a generic name such as `.tip` can collide with
+  rendered Markdown or Word content.
+* A viewer that leaves the app layout (focus / study mode) toggles `body.reading-focus` and must turn it off on `hashchange`
+  and handle `Esc` itself with `stopImmediatePropagation()`, so Esc never also leaves the document.
 * Each viewer is an IIFE with scoped `$` / `$$` helpers (see any viewer). Do not use `document.getElementById` for ids
   that exist in more than one pane.
 * Escape with `esc()` before `innerHTML`; assign handlers from code (`el.onclick = ...`), never inline `onclick="..."`

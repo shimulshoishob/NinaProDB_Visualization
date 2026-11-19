@@ -4,8 +4,7 @@
         <span class="spacer"></span>
         <label style="color:var(--fg2)">Decimals <select id="dec"><option value="">auto</option><option>2</option><option selected>4</option><option>6</option></select></label>
         <span style="color:var(--fg2)">Rows</span><input id="rFrom" type="number" min="1" placeholder="from" style="width:90px"><input id="rTo" type="number" min="1" placeholder="to" style="width:90px">
-        <button class="btn" id="csvBtn" title="Export the current sheet (optionally only the row range) as CSV">Export CSV</button>
-        <button class="btn" id="zipBtn" title="All sheets as a ZIP of CSV files">Export all (ZIP)</button>
+        <button class="btn" id="exportBtn" title="Export the current sheet, or every sheet" aria-haspopup="menu"><i data-icon="download"></i>Export</button>
       </div>
       <div class="formula"><input id="nameBox" readonly aria-label="Selected cell"><span class="fx">fx</span><input id="formulaBox" readonly aria-label="Cell value">
         <span class="goto">Go to row <input id="gotoRow" type="number" min="1" placeholder="#"></span>

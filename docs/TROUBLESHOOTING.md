@@ -1,5 +1,8 @@
 # Troubleshooting and FAQ
 
+**A file will not open.** The viewer shows *Can't open this file* with the reason. *Try again* re-reads it, *Open with
+system app* hands it to your operating system, and *Go back* returns to the list.
+
 ## Starting the app
 
 **“Address already in use” / Port 8000 is in use.** Another program (often an older copy of this app) holds the port.

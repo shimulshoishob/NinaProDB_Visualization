@@ -4,13 +4,18 @@ const P = document.getElementById('v-code');
 // Queries are scoped to this viewer's pane so ids/classes never clash with other viewers.
 const $ = (s, r = P) => r.querySelector(s), $$ = (s, r = P) => [...r.querySelectorAll(s)];
 let file = null, lang = '', data = null, original = '', anns = [], sel = null, anchor = null;
-let cat = store.get('codeCat', 'general'), style = 'highlight', fontSize = store.get('fs', 13), sideTab = null;
+let cat = store.get('codeCat', 'general'), style = 'highlight', fontSize = store.get('fs', 13), sideTab = store.get('codeTab', null);
+const THEMES = [['auto', 'Match the app'], ['solarized-light', 'Solarized Light'], ['solarized-dark', 'Solarized Dark'], ['one-dark', 'One Dark'], ['dracula', 'Dracula'], ['nord', 'Nord']];
+let theme = store.get('codeTheme', 'auto'), study = false;
 let matches = [], hits = [], hitI = -1, matchCase = false;
 let folds = new Map(), folded = new Set(), replaced = 0;
 const code = $('#codeBody');
 
 P.style.setProperty('--fs', fontSize + 'px');
-if (store.get('wrap', false)) { code.classList.add('wrap'); $('#wrapBtn').classList.add('active'); }
+if (store.get('wrap', false)) code.classList.add('wrap');
+const wrapEl = $('#codeWrap');
+function applyTheme() { if (theme === 'auto' || !THEMES.some(t => t[0] === theme)) wrapEl.removeAttribute('data-ct'); else wrapEl.dataset.ct = theme; }
+applyTheme();
 api('/api/languages').then(l => $('#langs').innerHTML = l.map(x => `<option value="${esc(x.alias)}">${esc(x.name)}</option>`).join('')).catch(() => {});
 
 /* ---------------- loading ---------------- */
@@ -23,12 +28,12 @@ async function load(f, language) {
     $('#lang').textContent = data.language; $('#langIn').value = lang;
     $('#codeMeta').textContent = `${data.lines.length.toLocaleString()} lines · ${fmtSize(f.size)}` + (data.truncated ? ' · truncated at 2 MB' : '');
     const wrap = store.get('wrap', false) || data.alias === 'text';     // plain text reads better wrapped
-    code.classList.toggle('wrap', wrap); $('#wrapBtn').classList.toggle('active', wrap);
+    code.classList.toggle('wrap', wrap);
     anns = await Ann.list(f.path);
     computeFolds(); drawCode(); decorate(); renderOutline();
     showSide(sideTab || (data.outline.length ? 'outline' : 'notes'));
     const j = App.takeJump(f.path); if (j) setTimeout(() => jump(j.locator.start), 150);
-  } catch (e) { code.innerHTML = `<div style="padding:20px;color:var(--danger)">${esc(e.message)}</div>`; }
+  } catch (e) { code.innerHTML = ''; throw e; }
 }
 Viewers.code = f => { closeFind(); return load(f); };
 const joined = () => data.raw.join('\n') + (data.eol ? '\n' : '');
@@ -58,17 +63,40 @@ function applyFolds() {
 }
 function toggleFold(n) { folded.has(n) ? folded.delete(n) : folded.add(n); applyFolds(); }
 function reveal(n) { let changed = false; for (const [s, e] of folds) if (folded.has(s) && n > s && n <= e) { folded.delete(s); changed = true; } if (changed) applyFolds(); }
-$('#foldAll').onclick = () => { folded = new Set(folds.keys()); applyFolds(); };
-$('#unfoldAll').onclick = () => { folded.clear(); applyFolds(); };
 
 /* ---------------- outline & side panel ---------------- */
 function renderOutline() {
+  $('#olQ').value = '';
   $('#outlineList').innerHTML = data.outline.length ? data.outline.map(o => `<button class="ol" data-l="${o.line}" style="padding-left:${10 + Math.min(Math.floor(o.indent / 2), 4) * 10}px"><span class="k ${o.kind}">${o.kind === 'class' ? 'C' : 'ƒ'}</span><span class="nm">${esc(o.name)}</span><small>${o.line}</small></button>`).join('')
     : '<div class="noresult">No functions or classes detected in this file.</div>';
 }
 $('#outlineList').onclick = e => { const b = e.target.closest('.ol'); if (b) jump(+b.dataset.l); };
-function showSide(t) { sideTab = t; $$('#sideTabs button').forEach(b => b.classList.toggle('active', b.dataset.t === t)); $$('#notes [data-p]').forEach(d => d.hidden = d.dataset.p !== t); }
-$('#sideTabs').onclick = e => { const b = e.target.closest('button'); if (b) showSide(b.dataset.t); };
+function filterOutline() {
+  const q = $('#olQ').value.trim().toLowerCase(); let shown = 0;
+  $$('#outlineList .ol').forEach(b => { const ok = !q || $('.nm', b).textContent.toLowerCase().includes(q); b.hidden = !ok; if (ok) shown++; });
+  $('#outlineList .noresult.q')?.remove();
+  if (q && !shown && data?.outline.length) $('#outlineList').insertAdjacentHTML('beforeend', '<div class="noresult q">No matching symbols.</div>');
+}
+$('#olQ').oninput = filterOutline;
+$('#olQ').onkeydown = e => {
+  if (e.key === 'Enter') { const b = $('#outlineList .ol:not([hidden])'); if (b) { e.preventDefault(); jump(+b.dataset.l); } }
+  else if (e.key === 'Escape') { e.stopPropagation(); e.target.value = ''; filterOutline(); e.target.blur(); }
+};
+let curSym = null;
+function syncOutline() {                                  // mark the function or class the top of the screen is in
+  if (!data || !data.outline.length || $('#outlinePane').hidden) return;
+  const r = code.getBoundingClientRect(), el = document.elementFromPoint(r.left + 90, r.top + 14)?.closest?.('.ln'); if (!el) return;
+  const n = +el.dataset.n; let best = null; for (const o of data.outline) { if (o.line <= n) best = o; else break; }
+  if (best === curSym) return; curSym = best;
+  $$('#outlineList .ol.cur').forEach(b => b.classList.remove('cur'));
+  if (best) { const b = $(`#outlineList .ol[data-l="${best.line}"]`); if (b) { b.classList.add('cur'); const lr = $('#outlineList').getBoundingClientRect(), br = b.getBoundingClientRect(); if (br.top < lr.top || br.bottom > lr.bottom) b.scrollIntoView({block: 'nearest'}); } }
+}
+let symTimer = 0; code.addEventListener('scroll', () => { clearTimeout(symTimer); symTimer = setTimeout(() => { syncOutline(); placeSel(); }, 60); }, {passive: true});
+function showSide(t) { sideTab = t; $$('#sideTabs button').forEach(b => b.classList.toggle('active', b.dataset.t === t)); $$('#notes [data-p]').forEach(d => d.hidden = d.dataset.p !== t); if (t === 'outline') { curSym = null; syncOutline(); } }
+$('#sideTabs').onclick = e => { const b = e.target.closest('button'); if (b) { showSide(b.dataset.t); store.set('codeTab', b.dataset.t); } };
+function setNav(open) { $('#notes').hidden = !open; $('#codeNavBtn').setAttribute('aria-pressed', open); store.set('codeNavHidden', !open); }
+$('#codeNavBtn').onclick = () => setNav($('#notes').hidden);
+setNav(!store.get('codeNavHidden', false));
 
 /* ---------------- annotations (shared store: highlights, underlines, comments, bookmarks) ---------------- */
 const annPanel = Ann.panel($('#annPanel'), {title: 'Annotations', getItems: () => anns, fileName: () => file?.name,
@@ -149,14 +177,15 @@ code.addEventListener('click', async e => {
     if (e.shiftKey && anchor) setSel(anchor, n); else if (sel && sel.a === n && sel.b === n) clearSel(); else { anchor = n; setSel(n, n); }
     return;
   }
-  const btn = e.target.closest('.cmt .cm-a button'); if (!btn) return;
+  const btn = e.target.closest('.cmt .cm-a button');
+  if (!btn) { if (sel && getSelection().isCollapsed && !e.target.closest('.cmt')) clearSel(); return; }
   const a = anns.find(x => x.id === btn.closest('.cmt').dataset.id);
   if (btn.dataset.a === 'edit') composer(a); else removeAnn(a);
 });
 
 /* ---------------- line selection ---------------- */
 function setSel(a, b) { sel = {a: Math.min(a, b), b: Math.max(a, b)}; updateSel(); }
-function clearSel() { sel = anchor = null; updateSel(); }
+function clearSel() { sel = anchor = null; getSelection().removeAllRanges(); updateSel(); }
 function updateSel() {
   $$('.ln.sel', code).forEach(e => e.classList.remove('sel'));
   $('#selBar').hidden = !sel; if (!sel) return;
@@ -164,7 +193,26 @@ function updateSel() {
   $('#selRange').textContent = sel.a === sel.b ? sel.a : sel.a + '–' + sel.b;
   $('#selCats').innerHTML = Ann.catDots(cat);
   $$('#selStyle button').forEach(b => b.classList.toggle('active', b.dataset.s === style));
+  placeSel();
 }
+function placeSel() {                                     // float the popover just above the selected lines (below if there is no room)
+  const bar = $('#selBar'); if (bar.hidden || !sel) return;
+  const first = lineEl(sel.a), last = lineEl(sel.b); if (!first || !last || !first.offsetParent) return;
+  const wr = wrapEl.getBoundingClientRect(), fr = first.getBoundingClientRect(), lr = last.getBoundingClientRect(), w = bar.offsetWidth, h = bar.offsetHeight;
+  let top = fr.top - wr.top - h - 8; if (top < 8) top = lr.bottom - wr.top + 8;
+  bar.style.top = Math.max(8, Math.min(top, wr.height - h - 8)) + 'px'; bar.style.left = Math.max(8, Math.min(84, wr.width - w - 12)) + 'px';
+}
+$('#selBar').addEventListener('mousedown', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); });   // keep the text selected while clicking
+code.addEventListener('mouseup', e => {                   // dragging over code selects its lines too
+  if (e.target.closest('.ln > b, .fd, .cmt')) return;
+  setTimeout(() => {
+    const g = getSelection(); if (!g.rangeCount || g.isCollapsed) return;
+    const r = g.getRangeAt(0), ln = n => (n.nodeType === 1 ? n : n.parentElement)?.closest('.ln');
+    const a = ln(r.startContainer), b = ln(r.endContainer); if (!a || !b || !code.contains(a) || !code.contains(b)) return;
+    let x = +a.dataset.n, y = +b.dataset.n; if (y > x && r.endOffset === 0) y--;
+    anchor = x; setSel(x, Math.max(x, y));
+  }, 0);
+});
 $('#selCats').onclick = e => { const d = e.target.closest('.cdot[data-cat]'); if (d) applyMark(d.dataset.cat); };
 $('#selStyle').onclick = e => { const b = e.target.closest('button'); if (b) { style = b.dataset.s; updateSel(); } };
 $('#addCmt').onclick = () => sel && composer();
@@ -211,13 +259,19 @@ function stepFind(d) {
   const m = hits[hitI]; if (m) { m.classList.add('on'); m.scrollIntoView({block: 'center'}); }
   $('#findInfo').textContent = `${hitI + 1} / ${matches.length}`;
 }
-function openFind(focusReplace) { $('#findBar').hidden = false; (focusReplace ? $('#repl') : $('#find')).focus(); (focusReplace ? $('#repl') : $('#find')).select(); }
-function closeFind() { if ($('#findBar').hidden) return; $('#find').value = ''; runFind(false); $('#findBar').hidden = true; }
-$('#findBtn').onclick = () => openFind(); $('#findClose').onclick = closeFind;
-$('#caseBtn').onclick = () => { matchCase = !matchCase; $('#caseBtn').classList.toggle('active', matchCase); runFind(); };
+function setRepl(on) { $('#replRow').hidden = !on; $('#replHint').hidden = !on; $('#replToggle').setAttribute('aria-expanded', on); $('#replToggle').classList.toggle('open', on); }
+function openFind(focusReplace) {
+  const g = getSelection(), t = g.rangeCount && !g.isCollapsed ? g.toString() : '';
+  if (t && !t.includes('\n') && t.length < 100 && code.contains(g.anchorNode)) { $('#find').value = t; runFind(); }   // search for what is selected
+  $('#findBar').hidden = false; if (focusReplace) setRepl(true);
+  const f = focusReplace ? $('#repl') : $('#find'); f.focus(); f.select();
+}
+$('#replToggle').onclick = () => setRepl($('#replRow').hidden);
+function closeFind() { if ($('#findBar').hidden) return false; $('#find').value = ''; runFind(false); $('#findBar').hidden = true; setRepl(false); code.focus(); return true; }
+$('#caseBtn').onclick = () => { matchCase = !matchCase; $('#caseBtn').classList.toggle('active', matchCase); $('#caseBtn').setAttribute('aria-pressed', matchCase); runFind(); };
 $('#find').oninput = debounce(() => runFind(), 200);
-$('#find').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); stepFind(e.shiftKey ? -1 : 1); } if (e.key === 'Escape') closeFind(); };
-$('#repl').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#replOne').click(); } if (e.key === 'Escape') closeFind(); };
+$('#find').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); stepFind(e.shiftKey ? -1 : 1); } if (e.key === 'Escape') { e.stopPropagation(); closeFind(); } };
+$('#repl').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#replOne').click(); } if (e.key === 'Escape') { e.stopPropagation(); closeFind(); } };
 $('#fNext').onclick = () => stepFind(1); $('#fPrev').onclick = () => stepFind(-1);
 
 async function applyEdit(newRaw, count) {
@@ -255,22 +309,53 @@ $('#modSave').onclick = async () => {
   catch (e) { toast(e.message, true); }
 };
 
-/* ---------------- view options, export, shortcuts ---------------- */
-async function gotoLine() { const v = await UI.prompt('Go to line', '', {message: 'Enter a line number from 1 to ' + data.lines.length + '.', label: 'Line number', confirm: 'Go'}); if (v && +v > 0) jump(Math.min(+v, data.lines.length)); }
-$('#gotoBtn').onclick = () => data && gotoLine();
+/* ---------------- view options, themes, study mode, export, shortcuts ---------------- */
+async function gotoLine() {
+  if (!data) return;
+  const v = await UI.prompt('Go to line', '', {message: 'Enter a line number from 1 to ' + data.lines.length.toLocaleString() + '.', label: 'Line number', placeholder: 'e.g. 120', confirm: 'Go'});
+  if (v === null || !v.trim()) return;
+  const n = parseInt(v.replace(/[^\d]/g, ''), 10);              // accepts "120", "line 120", ":120"
+  if (!n) return toast('Type a line number, for example 120.', true);
+  jump(Math.min(n, data.lines.length));
+}
+const copyAll = () => data && copyText(data.raw.join('\n'));
 $('#langIn').onchange = e => file && load(file, e.target.value.trim());
-$('#copyAll').onclick = () => data && copyText(data.raw.join('\n'));
 const setFont = d => { fontSize = Math.max(10, Math.min(26, fontSize + d)); store.set('fs', fontSize); P.style.setProperty('--fs', fontSize + 'px'); };
-$('#fontUp').onclick = () => setFont(1); $('#fontDn').onclick = () => setFont(-1);
-$('#wrapBtn').onclick = () => { code.classList.toggle('wrap'); const on = code.classList.contains('wrap'); $('#wrapBtn').classList.toggle('active', on); store.set('wrap', on); };
-$('#exportPdf').onclick = () => { if (!data) return; const had = code.classList.contains('wrap'); code.classList.add('wrap'); folded.clear(); applyFolds(); toast('Choose “Save as PDF” in the print dialog.'); setTimeout(() => { print(); if (!had) code.classList.remove('wrap'); }, 300); };
+const setWrap = on => { code.classList.toggle('wrap', on); store.set('wrap', on); };
+const foldAll = () => { folded = new Set(folds.keys()); applyFolds(); }, unfoldAll = () => { folded.clear(); applyFolds(); };
+function setTheme(t) { theme = t; store.set('codeTheme', t); applyTheme(); }
+function setStudy(on) {                                    // distraction-free reading: only the code and a small pill remain
+  study = !!on && !!data; P.classList.toggle('study', study); document.body.classList.toggle('reading-focus', study);
+  $('#codeFocusPill').hidden = !study; $('#studyBtn').setAttribute('aria-pressed', study); $('#studyBtn').classList.toggle('active', study);
+  if (study) { closeFind(); code.focus(); } placeSel();
+}
+addEventListener('hashchange', () => { if (study) setStudy(false); });
+$('#studyBtn').onclick = () => setStudy(!study); $('#codeFocusOff').onclick = () => setStudy(false);
+$('#codeMore').onclick = e => UI.menu(e.currentTarget, [
+  {label: 'Larger text', hint: '+', onClick: () => setFont(1)}, {label: 'Smaller text', hint: '−', onClick: () => setFont(-1)},
+  {label: 'Wrap long lines', checked: code.classList.contains('wrap'), onClick: () => setWrap(!code.classList.contains('wrap'))},
+  {sep: true}, {heading: 'Colour theme'},
+  ...THEMES.map(([id, name]) => ({label: name, checked: theme === id, onClick: () => setTheme(id)})),
+  {sep: true},
+  {label: 'Fold all blocks', icon: 'fold', onClick: foldAll}, {label: 'Unfold all blocks', icon: 'unfold', onClick: unfoldAll}, {label: 'Go to line…', hint: 'Ctrl G', onClick: gotoLine},
+  {sep: true},
+  {label: 'Study mode', hint: 'S', checked: study, onClick: () => setStudy(!study)},
+  {label: 'Copy whole file', onClick: copyAll}, {label: 'Export as PDF', icon: 'print', onClick: exportPdf},
+]);
+$('#findBtn').onclick = () => openFind(); $('#findClose').onclick = closeFind;
+function exportPdf() { if (!data) return; const had = code.classList.contains('wrap'); code.classList.add('wrap'); folded.clear(); applyFolds(); toast('Choose “Save as PDF” in the print dialog.'); setTimeout(() => { print(); if (!had) code.classList.remove('wrap'); }, 300); }
 document.addEventListener('keydown', e => {
   if (!file || P.hidden) return;
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if (mod && k === 'f') { e.preventDefault(); openFind(); }
   else if (mod && k === 'h') { e.preventDefault(); openFind(true); }
   else if (mod && k === 'g') { e.preventDefault(); gotoLine(); }
-  else if (e.key === 'Escape' && !typing()) { if (sel) clearSel(); else closeFind(); }
+  else if (e.key === 'Escape' && !typing()) {              // Esc closes the innermost thing first; only then does the app leave the document
+    if (sel) { e.stopImmediatePropagation(); clearSel(); } else if (!$('#findBar').hidden) { e.stopImmediatePropagation(); closeFind(); } else if (study) { e.stopImmediatePropagation(); setStudy(false); }
+  }
+  else if (!typing() && !mod && (e.key === '+' || e.key === '=')) setFont(1);
+  else if (!typing() && !mod && e.key === '-') setFont(-1);
+  else if (k === 's' && !typing() && !mod) setStudy(!study);
   else if (k === 'c' && !typing() && sel && !mod) composer();
   else if (k === 'b' && !typing() && sel && !mod) toggleBookmark();
 });

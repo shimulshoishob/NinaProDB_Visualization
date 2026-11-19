@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from flask import abort, jsonify, request, send_file, Response
 from pygments.formatters import HtmlFormatter
-from pygments.token import STANDARD_TYPES
+from pygments.token import STANDARD_TYPES, Token
 
 
 BASE = Path(__file__).resolve().parent
@@ -76,6 +76,26 @@ def _css_class(ttype):
     while ttype not in STANDARD_TYPES:
         ttype = ttype.parent
     return STANDARD_TYPES[ttype]
+
+
+CODE_THEMES = ("solarized-light", "solarized-dark", "one-dark", "dracula", "nord")
+
+
+def _code_themes_css():
+    """Optional colour themes for the code viewer, scoped to `.cwrap[data-ct="<name>"]` (the viewer's wrapper)."""
+    out = []
+    for name in CODE_THEMES:
+        fmt = HtmlFormatter(style=name)
+        sel = f'html .cwrap[data-ct="{name}"]'
+        bg = (fmt.style.background_color or "#ffffff").lstrip("#")
+        if len(bg) == 3:
+            bg = "".join(c * 2 for c in bg)
+        r, g, b = (int(bg[i:i + 2], 16) for i in (0, 2, 4))
+        dark = 0.299 * r + 0.587 * g + 0.114 * b < 128
+        fg = fmt.style.style_for_token(Token.Text).get("color") or ("e6e6e6" if dark else "1d1d1f")
+        out.append(fmt.get_style_defs(sel))
+        out.append(f"{sel}{{--cb:#{bg};--cf:#{fg};}}")
+    return "\n".join(out) + "\n"
 
 
 def highlight_lines(code, lexer):
@@ -148,7 +168,8 @@ def register_common(app, ws, default_port):
         """Syntax-highlighting stylesheet for the light and dark themes."""
         light = HtmlFormatter(style="default").get_style_defs('html:not([data-theme="dark"]) .hl')
         dark = HtmlFormatter(style="github-dark").get_style_defs('html[data-theme="dark"] .hl')
-        return Response(light + "\n" + dark + "\n.hl{background:transparent!important}\n", mimetype="text/css")
+        fixes = 'html:not([data-theme="dark"]) .hl .ow{color:#8a1fd0}\n'      # the stock colour is just under 4.5:1 contrast
+        return Response(light + "\n" + dark + "\n.hl{background:transparent!important}\n" + fixes + _code_themes_css(), mimetype="text/css")
 
     @app.errorhandler(400)
     @app.errorhandler(403)

@@ -1,10 +1,11 @@
 #v-code .col{flex:1;min-height:0;display:flex;flex-direction:column}
 #v-code .split{flex:1;display:flex;min-height:0}
-#v-code .toolbar.sel{background:color-mix(in srgb,var(--accent) 12%,var(--bg));border-bottom-color:var(--accent)}
-#v-code .codebox{flex:1;overflow:auto;font:var(--fs,13px)/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:6px 0 60px;outline:none}
+#v-code .cwrap{flex:1;min-width:0;position:relative;display:flex;background:var(--cb,var(--bg));color:var(--cf,var(--fg))}
+#v-code .cwrap[data-ct]{--gut:color-mix(in srgb,var(--cf) 45%,var(--cb))}
+#v-code .codebox{flex:1;min-width:0;overflow:auto;font:var(--fs,13px)/var(--lh,1.6) var(--mono);padding:6px 0 60px;outline:none}
 #v-code .ln{display:flex;content-visibility:auto;contain-intrinsic-size:auto 21px}
-#v-code .ln:hover{background:var(--hover)}
-#v-code .ln>b{flex:none;width:62px;text-align:right;padding-right:14px;color:var(--fg2);font-weight:400;cursor:pointer;user-select:none;position:sticky;left:0;background:var(--bg)}
+#v-code .ln:hover{background:color-mix(in srgb,var(--cf,var(--fg)) 6%,transparent)}
+#v-code .ln>b{flex:none;width:62px;text-align:right;padding-right:14px;color:var(--gut,var(--fg2));font-weight:400;cursor:pointer;user-select:none;position:sticky;left:0;background:var(--cb,var(--bg))}
 #v-code .ln>b:hover{color:var(--accent);text-decoration:underline}
 #v-code .ln>.t{white-space:pre;padding-right:24px;flex:1;tab-size:4}
 #v-code .wrap .ln>.t{white-space:pre-wrap;word-break:break-word}
@@ -40,13 +41,16 @@
 #v-code .ln.folded>.fd[data-f]::before{transform:rotate(-45deg);top:.62em}
 #v-code .ln.folded>.t::after{content:"…";margin-left:.6em;padding:0 .5em;border-radius:var(--r-xs);background:var(--bg3);color:var(--fg2)}
 #v-code .grp{display:inline-flex;align-items:center;gap:2px;padding:0 6px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
-#v-code .findbar,#v-code .modbar{background:var(--bg2)}
-#v-code .findbar .hint{color:var(--fg2);font-size:var(--fs-sm);max-width:320px;line-height:1.3}
+#v-code .modbar{background:var(--bg2)}
 #v-code .sepv{width:1px;height:22px;background:var(--line);margin:0 4px}
 #v-code .modbar{background:color-mix(in srgb,var(--warn) 12%,var(--bg));border-bottom-color:var(--warn)}
 #v-code .badge.warn{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
-#v-code #sideTabs{margin:10px;display:flex}#v-code #sideTabs button{flex:1}
+#v-code #sideTabs{margin:var(--s2);display:flex}#v-code #sideTabs button{flex:1}
+#v-code #notes[hidden]{display:none}
+#v-code #outlinePane{flex:1;min-height:0;display:flex;flex-direction:column}#v-code #outlinePane[hidden]{display:none}
+#v-code .ol-search{padding:0 var(--s2) var(--s2)}#v-code .ol-search input{width:100%}
 #v-code #outlineList{flex:1;overflow:auto;padding:0 6px 12px}
+#v-code .ol[hidden]{display:none}#v-code .ol.cur{background:var(--sel)}#v-code .ol.cur .nm{color:var(--accent);font-weight:600}
 #v-code .ol{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;padding:4px 8px;border-radius:var(--r-sm);cursor:pointer;font-size:var(--fs-md)}
 #v-code .ol:hover{background:var(--hover)}#v-code .ol .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:var(--fs-sm)}#v-code .ol small{color:var(--fg2)}
 #v-code .ol .k{width:18px;height:18px;border-radius:var(--r-xs);display:grid;place-items:center;font:700 var(--fs-xs) var(--mono);background:var(--bg3);color:var(--fg2);flex:none}
@@ -61,3 +65,23 @@
 #v-code .pcats{display:inline-flex;align-items:center}
 #v-code #annPanel{flex:1;min-height:0;display:flex}#v-code #annPanel[hidden]{display:none}
 #v-code #annPanel.ap{width:100%}
+
+/* floating selection popover */
+#v-code .selpop{position:absolute;z-index:10;display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;max-width:calc(100% - 24px);padding:var(--s2) var(--s3);background:var(--raised);color:var(--fg);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-2);animation:selin var(--t1) var(--ease)}
+#v-code .selpop[hidden]{display:none}#v-code .sp-where{color:var(--fg2);font-size:var(--fs-sm);white-space:nowrap}#v-code .sp-where b{color:var(--fg)}
+@keyframes selin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* find / replace panel */
+#v-code .findpanel{position:absolute;top:var(--s2);right:var(--s4);z-index:11;width:min(460px,calc(100% - 24px));padding:var(--s2);background:var(--raised);color:var(--fg);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-2);display:flex;flex-direction:column;gap:var(--s2)}
+#v-code .findpanel[hidden],#v-code .fp-row[hidden],#v-code .fp-hint[hidden]{display:none}
+#v-code .fp-row{display:flex;align-items:center;gap:var(--s1)}#v-code .fp-row input{flex:1;min-width:0}
+#v-code #replToggle .ic{transition:transform var(--t1) var(--ease)}#v-code #replToggle.open .ic{transform:rotate(180deg)}
+#v-code #caseBtn.active{background:var(--sel);color:var(--accent)}
+#v-code .fp-hint{color:var(--fg3);font-size:var(--fs-xs);padding:0 var(--s2)}
+/* study mode: only the code and a small pill remain, with roomier type */
+#v-code.study{--lh:1.9}#v-code.study #codeBar,#v-code.study #notes{display:none}
+#v-code #codeFocusPill{position:absolute;top:var(--s3);right:var(--s4);z-index:12;display:flex;align-items:center;gap:var(--s1);padding:2px 2px 2px var(--s3);background:var(--raised);color:var(--fg2);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-1);font-size:var(--fs-sm);opacity:.55;transition:opacity var(--t2) var(--ease)}
+#v-code #codeFocusPill[hidden]{display:none}#v-code #codeFocusPill:hover,#v-code #codeFocusPill:focus-within{opacity:1}
+#v-code.study .findpanel{top:calc(var(--s2) + 40px)}
+#v-code #codeBar{flex-wrap:nowrap;gap:var(--s1);padding:var(--s1) var(--s3);min-height:40px}
+@media (prefers-reduced-motion:reduce){#v-code .selpop{animation:none}}
+@media (max-width:640px){#v-code #codeBar{flex-wrap:wrap}#v-code #langIn,#v-code #codeMeta{display:none}#v-code .findpanel{right:var(--s2);left:var(--s2);width:auto}#v-code .selpop{left:var(--s2)!important}}

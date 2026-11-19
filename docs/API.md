@@ -24,7 +24,7 @@ without being documented here.
 | Method | Path | Description |
 |---|---|---|
 | GET | `/` | The single-page application. |
-| GET | `/pygments.css` | Syntax-highlighting styles (light and dark). |
+| GET | `/pygments.css` | Syntax-highlighting styles: light and dark, plus the optional code-viewer themes. |
 | GET | `/api/asset?path=` | Serve a file (images, PDFs, Markdown images). HTML/SVG/XML files are sent with `Content-Security-Policy: sandbox` so scripts in them cannot run. Supports HTTP range requests (used by pdf.js). |
 
 ## Library: browsing, recents, favourites, settings

@@ -9,9 +9,11 @@ const GAP = 12, PAD = 24, ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 let lib = null, doc = null, rec = null;
 let pages = [];                       // {w, h, el, state, token}
 let scale = 1, rotation = 0, fit = 'width', cur = 1, tops = [];
-let tab = 'thumbs', matches = [], matchI = -1, searchToken = 0, query = '';
+let tab = store.get('pdfTab', 'thumbs'), matches = [], matchI = -1, searchToken = 0, query = '';
 let anns = [], tool = 'select', cat = store.get('pdfCat', 'general'), annPanel = null;
 let thumbObserver = null, outlineLoaded = false;
+if (!['thumbs', 'outline', 'ann'].includes(tab)) tab = 'thumbs';
+let showAnn = store.get('pdfShowAnn', true), focusMode = false, lastTab = null;
 
 async function pdfjs() {
   if (!lib) {
@@ -55,7 +57,7 @@ Viewers.pdf = async f => {
   loadAnn(f);
   doc.getMetadata().then(m => { const t = m.info?.Title; if (t) $('#pdfCount').title = t; }).catch(() => {});
 };
-async function closeDoc() { if (doc) { try { await doc.destroy(); } catch {} } doc = null; pages = []; matches = []; tops = []; anns = []; }
+async function closeDoc() { if (doc) { try { await doc.destroy(); } catch {} } doc = null; pages = []; matches = []; tops = []; anns = []; setResultsTab(false); }
 
 /* ---------------- layout ---------------- */
 function buildDom() {
@@ -102,7 +104,12 @@ function syncZoomSelect() {
   const sel = $('#pdfZoom'), pct = Math.round(scale * 100);
   sel.innerHTML = ZOOMS.map(z => `<option value="${z}">${Math.round(z * 100)}%</option>`).join('') + `<option value="cur" selected>${fit === 'width' ? 'Fit width ' : fit === 'page' ? 'Fit page ' : ''}${pct}%</option>`;
 }
-function persist() { if (rec) store.set('pdf:' + rec.path, {page: cur, scale, rotation, fit}); }
+function syncProgress() {
+  const n = pages.length, pct = n ? Math.round(100 * cur / n) : 0, bar = $('#pdfProg');
+  bar.firstElementChild.style.width = pct + '%'; bar.setAttribute('aria-valuenow', pct); bar.title = n ? `Page ${cur} of ${n} · ${pct}% read` : '';
+  $('#pdfFocusInfo').textContent = n ? `${cur} / ${n}` : '';
+}
+function persist() { if (rec) store.set('pdf:' + rec.path, {page: cur, pages: pages.length || (store.get('pdf:' + rec.path, {}).pages), scale, rotation, fit}); }
 
 /* ---------------- rendering (only pages near the viewport) ---------------- */
 function invalidateAll() { pages.forEach(p => { p.token = (p.token || 0) + 1; if (p.state) { p.el.innerHTML = `<div class="pg-ph">${p.el.dataset.n}</div>`; p.state = null; } }); }
@@ -125,7 +132,7 @@ function update() {
   if (c !== cur) { cur = c; persist(); }
   if (document.activeElement !== $('#pdfPage')) $('#pdfPage').value = cur;
   $('#pdfPrev').disabled = cur <= 1; $('#pdfNext').disabled = cur >= pages.length;
-  markThumb(); syncBookmark();
+  markThumb(); syncBookmark(); syncProgress();
 }
 async function renderPage(i) {
   const p = pages[i]; if (p.state) return; p.state = 'busy'; const token = ++p.token, d = doc;
@@ -162,12 +169,13 @@ new ResizeObserver(debounce(() => { if (doc && !P.hidden && fit) { applyFit(true
 $('#pdfZoomIn').onclick = () => setScale(ZOOMS.find(z => z > scale + .01) || scale);
 $('#pdfZoomOut').onclick = () => setScale([...ZOOMS].reverse().find(z => z < scale - .01) || scale);
 $('#pdfZoom').onchange = e => { if (e.target.value !== 'cur') setScale(+e.target.value); };
-$('#pdfFitW').onclick = () => { fit = 'width'; applyFit(true); }; $('#pdfFitP').onclick = () => { fit = 'page'; applyFit(true); };
-$('#pdfRotate').onclick = () => { rotation = (rotation + 90) % 360; const a = anchor(); layout(); if (fit) applyFit(false); restore(a); invalidateAll(); update(); persist(); };
-$('#pdfNavBtn').onclick = () => { $('#pdfNav').hidden = !$('#pdfNav').hidden; store.set('pdfNavHidden', $('#pdfNav').hidden); };
-if (store.get('pdfNavHidden', false)) $('#pdfNav').hidden = true;
+const fitWidth = () => { fit = 'width'; applyFit(true); }, fitPage = () => { fit = 'page'; applyFit(true); };
+const rotate = () => { rotation = (rotation + 90) % 360; const a = anchor(); layout(); if (fit) applyFit(false); restore(a); invalidateAll(); update(); persist(); };
+function setNav(open) { $('#pdfNav').hidden = !open; $('#pdfNavBtn').setAttribute('aria-pressed', open); store.set('pdfNavHidden', !open); }
+$('#pdfNavBtn').onclick = () => setNav($('#pdfNav').hidden);
+setNav(!store.get('pdfNavHidden', innerWidth < 700));            // phones start with the panel closed
 scroll.addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); setScale(scale * (e.deltaY < 0 ? 1.1 : 1 / 1.1)); } }, {passive: false});
-$('#pdfPrint').onclick = () => {
+const printDoc = () => {
   if (!rec) return;
   const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
   f.src = '/api/asset?path=' + enc(rec.path); document.body.appendChild(f);
@@ -178,19 +186,48 @@ document.addEventListener('keydown', e => {
   const mod = e.ctrlKey || e.metaKey;
   if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); $('#pdfQ').focus(); $('#pdfQ').select(); return; }
   if (typing() || mod) return;
-  if (e.key === '+' || e.key === '=') $('#pdfZoomIn').click(); else if (e.key === '-') $('#pdfZoomOut').click(); else if (e.key === '0') $('#pdfFitW').click();
-  else if (e.key === 'r') $('#pdfRotate').click();
+  if (e.key === '+' || e.key === '=') $('#pdfZoomIn').click(); else if (e.key === '-') $('#pdfZoomOut').click(); else if (e.key === '0') fitWidth();
+  else if (e.key === 'r') rotate();
+  else if (e.key === 'f') setFocus(!focusMode);
   else if (e.key === 'b') $('#pdfBookmark').click();
-  else if (e.key === 'Escape') { closePop(); setTool('select'); }
+  else if (e.key === 'Escape') {                  // Esc first closes what is open; only then does the app leave the document
+    if (!pop.hidden || tool !== 'select') { e.stopImmediatePropagation(); closePop(); setTool('select'); }
+    else if (focusMode) { e.stopImmediatePropagation(); setFocus(false); }
+  }
 });
+
+/* ---------------- focus mode, annotation visibility, the "more" menu ---------------- */
+function setFocus(on) {
+  focusMode = !!on && !!doc; P.classList.toggle('focus', focusMode); document.body.classList.toggle('reading-focus', focusMode);
+  $('#pdfFocusPill').hidden = !focusMode; if (focusMode) { closePop(); scroll.focus(); }
+  setTimeout(() => { if (fit) applyFit(true); else schedule(); }, 60);
+}
+addEventListener('hashchange', () => { if (focusMode) setFocus(false); });
+function setShowAnn(on) { showAnn = on; store.set('pdfShowAnn', on); holder.classList.toggle('hide-ann', !on); }
+setShowAnn(showAnn);
+$('#pdfFocusOff').onclick = () => setFocus(false);
+$('#pdfMore').onclick = e => UI.menu(e.currentTarget, [
+  {label: 'Fit to width', hint: '0', icon: 'fitw', onClick: fitWidth}, {label: 'Fit to page', icon: 'fitp', onClick: fitPage}, {label: 'Rotate view', hint: 'R', icon: 'rotate', onClick: rotate},
+  {sep: true},
+  {label: 'Focus mode', hint: 'F', checked: focusMode, onClick: () => setFocus(!focusMode)},
+  {label: 'Show annotations', checked: showAnn, onClick: () => setShowAnn(!showAnn)},
+  {sep: true},
+  {label: 'Print', icon: 'print', onClick: printDoc}, {label: 'Export with annotations', icon: 'download', onClick: exportPdf},
+]);
 
 /* ---------------- side panel: pages / outline / search results ---------------- */
 $('#pdfTabs').onclick = e => { const b = e.target.closest('button'); if (b) showTab(b.dataset.t); };
 function showTab(t) {
-  tab = t; $$('#pdfTabs button').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+  if (t === 'results') { if (tab !== 'results') lastTab = tab; } else { store.set('pdfTab', t); }
+  tab = t; $$('#pdfTabs button').forEach(b => { b.classList.toggle('active', b.dataset.t === t); b.setAttribute('aria-pressed', b.dataset.t === t); });
   $('#pdfSide').dataset.tab = t; $$('#pdfSide > div').forEach(d => d.hidden = d.dataset.p !== t);
+  $('#pdfSide').hidden = t === 'ann'; $('#pdfAnn').hidden = t !== 'ann';
   if (t === 'outline') loadOutline();
   if (t === 'thumbs') markThumb();
+}
+function setResultsTab(on) {                       // the Results tab exists only while a search is active
+  $('#pdfTabs [data-t=results]').hidden = !on;
+  if (!on && tab === 'results') showTab(lastTab && lastTab !== 'results' ? lastTab : 'thumbs');
 }
 function buildThumbs() {
   const side = $('#pdfSide'); side.innerHTML = '<div data-p="thumbs"></div><div data-p="outline" hidden></div><div data-p="results" hidden></div>';
@@ -241,9 +278,9 @@ async function loadOutline() {
 /* ---------------- search ---------------- */
 async function search(q) {
   const my = ++searchToken; query = q; matches = []; matchI = -1; markAll();
-  const info = $('#pdfQInfo'); info.hidden = !q;
+  const info = $('#pdfQInfo'); info.hidden = !q; $('#pdfQPrev').hidden = $('#pdfQNext').hidden = !q; setResultsTab(!!q);
   if (!q || !doc) { $('[data-p=results]').innerHTML = '<div class="noresult">Search the PDF to see results here.</div>'; return; }
-  const box = $('[data-p=results]'), d = doc, ql = q.toLowerCase(); box.innerHTML = ''; showTab('results');
+  const box = $('[data-p=results]'), d = doc, ql = q.toLowerCase(); box.innerHTML = ''; setResultsTab(true); showTab('results');
   for (let i = 1; i <= d.numPages; i++) {
     if (my !== searchToken || d !== doc) return;
     info.textContent = `Searching ${i}/${d.numPages}…`;
@@ -288,14 +325,13 @@ annPanel = Ann.panel($('#pdfAnn'), {title: 'Annotations', getItems: () => anns, 
   onJump: a => { goTo(a.locator.page); setTimeout(() => flash(a.id), 450); },
   onEdit: a => { goTo(a.locator.page); setTimeout(() => { flash(a.id); openPop({a}); }, 500); },
   onDelete: a => removeAnn(a)});
-if (store.get('pdfAnnHidden', false)) $('#pdfAnn').hidden = true;
-$('#pdfAnnBtn').onclick = () => { $('#pdfAnn').hidden = !$('#pdfAnn').hidden; store.set('pdfAnnHidden', $('#pdfAnn').hidden); };
 const syncCats = () => { const h = Ann.catDots(cat); $('#pdfCats').innerHTML = h; $('#pdfSelCats').innerHTML = h; };
+const syncAnnCount = () => { const b = $('#pdfTabs [data-t=ann]'); b.title = anns.length ? `${anns.length} annotation${anns.length === 1 ? '' : 's'} in this PDF` : 'No annotations yet'; };
 syncCats();
 P.addEventListener('click', e => { const d = e.target.closest('.cdot[data-cat]'); if (d && (d.closest('#pdfCats') || d.closest('#pdfSelCats'))) { cat = d.dataset.cat; store.set('pdfCat', cat); syncCats(); } });
 
 async function loadAnn(f) {
-  try { const list = await Ann.list(f.path); if (rec === f) { anns = list; annPanel.render(); pages.forEach((p, i) => p.state === 'done' && drawAnn(i)); syncBookmark(); } }
+  try { const list = await Ann.list(f.path); if (rec === f) { anns = list; annPanel.render(); syncAnnCount(); pages.forEach((p, i) => p.state === 'done' && drawAnn(i)); syncBookmark(); } }
   catch (e) { toast('Could not load annotations: ' + e.message, true); }
 }
 async function addAnn(body) {
@@ -308,7 +344,7 @@ async function removeAnn(a, ask = true) {
   if (ask && (a.text || a.kind === 'drawing') && !await UI.confirm('', {title: 'Delete this annotation?', confirm: 'Delete', danger: true})) return;
   try { await Ann.remove(a.id); anns = anns.filter(x => x.id !== a.id); refreshAnn(a); closePop(); } catch (e) { toast(e.message, true); }
 }
-function refreshAnn(a) { const i = (a.locator.page || 1) - 1; if (pages[i]?.state === 'done') drawAnn(i); annPanel.render(); syncBookmark(); }
+function refreshAnn(a) { const i = (a.locator.page || 1) - 1; if (pages[i]?.state === 'done') drawAnn(i); annPanel.render(); syncAnnCount(); syncBookmark(); }
 function flash(id) { $$(`[data-id="${id}"]`, holder).forEach(el => { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); }); }
 
 /* drawing the annotation layer of a page */
@@ -386,8 +422,11 @@ function pageGroups() {
 document.addEventListener('selectionchange', () => {
   if (P.hidden || tool !== 'select') return; const sel = getSelection();
   if (!sel.rangeCount || sel.isCollapsed || !holder.contains(sel.anchorNode)) { selbar.hidden = true; return; }
-  const r = sel.getRangeAt(0).getClientRects(); if (!r.length) return; const first = r[0], sr = scroll.getBoundingClientRect();
-  selbar.hidden = false; selbar.style.left = Math.max(8, first.left - sr.left + scroll.scrollLeft) + 'px'; selbar.style.top = Math.max(4, first.top - sr.top + scroll.scrollTop - 46) + 'px';
+  const box = sel.getRangeAt(0).getBoundingClientRect(); if (!box.width && !box.height) return; const sr = scroll.getBoundingClientRect();
+  selbar.hidden = false; const w = selbar.offsetWidth, h = selbar.offsetHeight;
+  const above = box.top - sr.top > h + 14, x = box.left + box.width / 2 - sr.left + scroll.scrollLeft - w / 2;
+  selbar.style.left = Math.max(8 + scroll.scrollLeft, Math.min(x, scroll.scrollLeft + scroll.clientWidth - w - 8)) + 'px';
+  selbar.style.top = (above ? box.top - sr.top + scroll.scrollTop - h - 8 : box.bottom - sr.top + scroll.scrollTop + 8) + 'px';
 });
 selbar.addEventListener('mousedown', e => e.preventDefault());       // keep the text selected while clicking
 selbar.addEventListener('click', async e => {
@@ -425,7 +464,7 @@ scroll.addEventListener('click', e => {
 /* tools: select / pen / sticky note */
 function setTool(t) {
   tool = t; $$('#pdfTools .tool').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
-  holder.classList.toggle('pen', t === 'pen'); holder.classList.toggle('note', t === 'note'); selbar.hidden = true; if (t !== 'select') getSelection().removeAllRanges();
+  holder.classList.toggle('pen', t === 'pen'); holder.classList.toggle('note', t === 'note'); P.dataset.tool = t; selbar.hidden = true; if (t !== 'select') getSelection().removeAllRanges();
 }
 $('#pdfTools').addEventListener('click', e => { const b = e.target.closest('.tool'); if (b) setTool(tool === b.dataset.tool && tool !== 'select' ? 'select' : b.dataset.tool); });
 holder.addEventListener('pointerdown', e => {
@@ -454,5 +493,5 @@ $('#pdfBookmark').onclick = async () => {
   if (!doc) return; const b = bookmarkOf(cur);
   if (b) { await removeAnn(b, false); toast('Bookmark removed'); } else { await addAnn({kind: 'bookmark', category: 'general', text: '', quote: '', locator: {page: cur}}); toast('Page ' + cur + ' bookmarked'); }
 };
-$('#pdfExport').onclick = () => { if (!rec) return; if (!anns.length) toast('You have no annotations yet, so the copy matches the original.'); location.href = '/api/pdf/export?path=' + enc(rec.path); };
+const exportPdf = () => { if (!rec) return; if (!anns.length) toast('You have no annotations yet, so the copy matches the original.'); location.href = '/api/pdf/export?path=' + enc(rec.path); };
 })();

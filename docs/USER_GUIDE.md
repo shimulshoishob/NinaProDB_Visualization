@@ -5,12 +5,15 @@ not work, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ## 1. The big picture
 
-Open the app and you land on the **Dashboard**: *“What would you like to study today?”*
+Open the app and you land on the **Dashboard**: *“Your space to think, learn, and build.”*
 
-* **Category cards**: Code, PDF, Text, Word, Presentations, Images and Diagrams, Data, Recent Files.
+* **Open a document** uses your system's file chooser (or the in-app file browser if none is available); **Explore your library** opens the Library.
 * **Search box**: type two or more letters to search file names, notes, annotations, snippets and practice questions.
-* **Study strip**: minutes studied today, streak, questions to review, open to-dos and your next exam.
-* **Pinned** and **Recently opened** files.
+* **Continue studying**: your last three files. PDFs show a progress bar and "Page 3 of 12" (kept in this browser).
+* **Pinned** files, **Explore your materials** (Code, PDF, Text, Word, Presentations, Images and Diagrams, Data),
+  **Your workspace** (Notes, Annotations, Planner, Toolkit) and a small **Study overview**: minutes today, streak,
+  questions to review, open to-dos and your next exam.
+* Inside a category the file browser shows its description and a **Recent** row for quick access.
 
 The left navigation is grouped: **Dashboard**, **Recent**, **Library**, **Favorites**, **Collections**, **Bookmarks**; then
 **Subjects**, **Notes**, **Annotations**, **Planner**, **Toolkit**; **Settings** at the bottom. The theme (system / light /
@@ -38,34 +41,51 @@ note about it.
 ## 2. Viewers
 
 ### PDF
-* Scroll, jump with the page box, **zoom** (`+`, `-`), **fit width** (`0`) or fit page, **rotate** (`r`).
-* Side panel: **Pages** (thumbnails), **Outline**, **Results** (search). Search with `Ctrl/⌘ + F`; matches are highlighted.
-* Your position, zoom and rotation are remembered per file.
+* One slim toolbar: panel toggle, page box, zoom, select / pen / sticky note, bookmark, search, and a **⋯ menu** with fit
+  width (`0`), fit page, rotate (`r`), **focus mode** (`f`), show or hide annotations, print and export. A thin line under
+  the toolbar shows how far you have read.
+* Side panel with three tabs: **Pages** (thumbnails), **Contents** (the PDF's outline) and **Annotations** (list, search,
+  filter and sort). A **Results** tab appears while you search (`Ctrl/⌘ + F`); matches are highlighted.
+  Whether the panel is open, which tab you used last, and whether annotations are shown are remembered.
+* Select text and a small toolbar floats above it: highlight, underline, strikethrough, comment, send to notes.
+* **Focus mode** hides the navigation and toolbars for undistracted reading. Press `Esc` (or the small × in the corner)
+  to leave it; `Esc` always undoes the innermost thing first (focus mode, pen or note tool, then the document).
+* Your page, zoom and rotation are remembered per file, and the dashboard shows your progress.
 * **Annotate** (see section 3), **print**, **download an annotated copy**.
 
 ### Code
 * Highlighting for hundreds of languages; change the language in the box if the guess is wrong.
-* **Fold** blocks (the arrow next to a line number, or the fold-all buttons), **outline** of functions and classes,
-  font size, wrapping, go to line (`Ctrl/⌘ + G`).
-* **Find** (`Ctrl/⌘ + F`) and **Replace** (`Ctrl/⌘ + H`). Replace edits a *working copy*: the file on disk stays as it is
+* One slim toolbar: panel toggle, language, **Find**, **Study mode** and a **⋯ menu** with text size (`+` / `-`), line
+  wrapping, **colour theme** (match the app, Solarized Light/Dark, One Dark, Dracula, Nord), fold/unfold all, go to line,
+  copy and export as PDF. Your theme, text size, wrapping, side panel and tab are remembered.
+* **Fold** blocks (the arrow next to a line number). The side panel's **Outline** lists functions and classes, has a
+  filter box (`Enter` jumps to the first match) and highlights the one you are reading.
+* Select code by dragging, or click a line number (`Shift`-click for a range): a small popover floats by the lines with
+  highlight / underline colours, **Comment**, bookmark, send to notes and copy.
+* **Study mode** (`S`) hides the navigation and toolbars and gives the code more room to breathe. `Esc` always undoes the
+  innermost thing first (selection, find, study mode, then the document).
+* **Go to line** (`Ctrl/⌘ + G`) accepts `120`, `line 120` or `:120`.
+* **Find** (`Ctrl/⌘ + F`, pre-filled with the selected text) and **Replace** (`Ctrl/⌘ + H`, or the arrow in the find panel). Replace edits a *working copy*: the file on disk stays as it is
   until you press **Save to file…** and confirm; a backup `name.bak-<time>` is created first. You can also download the
   copy or revert.
 * **Export PDF** prints the code with your highlights and comments (choose “Save as PDF” in the print dialog).
 
 ### Markdown, Word, PowerPoint, images
-* **Markdown**: GitHub-style preview, table of contents, a live scratch editor (not saved), export to HTML, print.
-* **Word (.docx)**: reading view with contents and find. Older `.doc`, `.odt`, `.rtf` open in your system app.
+Every viewer follows the same pattern as the PDF and code viewers: one slim toolbar with the controls you use all the time,
+a **⋯ menu** for the rest, and next/previous buttons that appear only while you search.
+* **Markdown**: GitHub-style preview, table of contents, a live scratch editor (not saved), the **⋯ menu** copies the source, exports HTML or prints.
+* **Word (.docx)**: reading view with a contents toggle and find; text size (`+` / `-`) and print are in the **⋯ menu**. Older `.doc`, `.odt`, `.rtf` open in your system app.
 * **PowerPoint (.pptx)**: slide view, outline mode, speaker notes, present full screen. It shows text, tables and
   pictures, not exact layouts. `.ppt` and `.key` open in your system app.
-* **Images**: zoom, fit, 100 %, rotate, dimensions.
+* **Images**: zoom, fit, dimensions; actual size (`1`) and rotate (`r`) are in the **⋯ menu**.
 
 ### Data files
 * **MAT** (`.mat`): a spreadsheet-like grid (column letters, row numbers, formula bar, arrow keys) with one tab per
   variable. Handles millions of rows. **Chart & stats** draws selected columns (click a column letter; Shift/Ctrl-click to
   add more; drag on the chart to zoom, click to jump to a row) and shows min / max / mean / std / RMS / median per column.
-  **Export CSV** for a sheet (optionally a row range) or **Export all (ZIP)**.
+  **Export** offers the current sheet as CSV (optionally a row range) or all sheets as a ZIP.
 * **JSON / JSONL**: tree, table (for lists of objects), raw. Search keys and values; click a node to see its path
-  (`$.users[0].name`) and copy it.
+  (`$.users[0].name`) and copy it. Expand, collapse, copy and download are in the **⋯ menu**.
 * **SQL scripts**: highlighted, with an outline; **Formatted** view; **Run in sandbox** executes the script in a
   throw-away in-memory database so you can browse the result. **SQLite databases** (`.db`, `.sqlite`): browse tables
   (sort, filter, pages), see the structure, run read-only queries (`Ctrl/⌘ + Enter`), export CSV.
@@ -84,11 +104,11 @@ orange = Important, purple = To do. Pick the colour first (the dots in the toolb
 | **Bookmark** this page (`b`). | **Bookmark** a line (`b`). |
 | Click any annotation to edit, change style/colour, or delete. | Edit/Delete buttons appear on each comment. |
 
-The **annotations panel** at the right of the viewer lists, searches, filters and sorts the notes for that file. The
+The **Annotations** tab of the viewer's side panel lists, searches, filters and sorts the notes for that file. The
 **Annotations** page (Notes → Annotations) shows everything, grouped by file, category or date, and opens the exact page
 or line when you click an item. Export notes as Markdown or JSON.
 
-**Download an annotated PDF** (the download icon in the PDF toolbar): a copy with your marks embedded, readable in other
+**Download an annotated PDF** (⋯ menu → Export with annotations): a copy with your marks embedded, readable in other
 PDF programs. Your original PDF is untouched.
 
 ## 4. Notes, subjects and the library
@@ -143,6 +163,9 @@ The built-in reference content is a concise study aid; check it against your cou
 | `Ctrl/⌘ + G` | Go to line (code) |
 | `Ctrl/⌘ + Enter` | Run the query (SQL console); save a comment |
 | `+` `-` `0` `r` | Zoom, fit width, rotate (PDF, images) |
+| `?` | Show all keyboard shortcuts |
+| `f` | Focus mode (PDF) |
+| `s` | Study mode (code) |
 | `b` | Bookmark the page or line |
 | `← →` | Previous / next slide |
 | `↑ ↓ Enter Space` | Move, open, tick in the file browser |

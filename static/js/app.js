@@ -10,6 +10,14 @@ const App = {
   jump: null,         // {path, ann}: where a viewer should scroll to after opening (set by the Annotations page)
   bs: null,           // browser state
   pages: {},          // extra pages registered by other scripts: pages.name = (rest, params) => ...
+  SHORTCUTS: [
+    ['Ctrl/⌘ + K', 'Command palette: jump anywhere, run actions, search everything'], ['?', 'Show this list of shortcuts'], ['/', 'Focus the search box'],
+    ['Esc', 'Close the innermost thing, then go back from a document'], ['[  and  ]', 'Previous / next file in the current selection'],
+    ['Ctrl/⌘ + B', 'Collapse the navigation'], ['Ctrl/⌘ + F', 'Search inside the open file'], ['Ctrl/⌘ + G', 'Go to line (code)'], ['Ctrl/⌘ + H', 'Find and replace (code)'],
+    ['+  −  0  R', 'Zoom, fit width, rotate (PDF, images); text size in code and Word'], ['F', 'Focus mode (PDF)'], ['S', 'Study mode (code)'], ['B', 'Bookmark the page or line'],
+    ['↑ ↓  Enter', 'Move and open in the file browser'],
+  ],
+  showShortcuts() { UI.info('Keyboard shortcuts', `<table class="keys">${this.SHORTCUTS.map(([k, d]) => `<tr><td><kbd>${esc(k)}</kbd></td><td>${esc(d)}</td></tr>`).join('')}</table>`); },
 
   init() {
     Theme.apply(); hydrateIcons();
@@ -19,6 +27,10 @@ const App = {
     addEventListener('hashchange', () => this.route());
     document.addEventListener('keydown', e => this.keys(e));
     UI.initTips();
+    addEventListener('unhandledrejection', e => {             // never fail silently
+      const r = e.reason, m = r && r.message; if (!m || /^(AbortError|RenderingCancelledException)$/.test(r.name)) return;
+      toast(m, true);
+    });
     $('#skipBtn').onclick = () => { const t = $('#page').hidden ? $('#main') : $('#page'); t.focus(); };
     A11y.start(); this.route();
   },
@@ -81,7 +93,24 @@ const App = {
     let v = rec.viewer;
     if (this.viewAs[rec.path] === 'code' && ['json', 'md', 'sql'].includes(v)) v = 'code';
     this.showPane(v); this.paintDocbar(rec, v);
-    try { await Viewers[v](rec); } catch (e) { toast(e.message, true); }
+    const pane = $('#v-' + v); pane.querySelector(':scope > .vstate')?.remove();
+    const wait = setTimeout(() => pane.insertAdjacentHTML('beforeend', `<div class="vstate load" role="status"><span class="spin"></span><span>Opening ${esc(rec.name)}…</span></div>`), 250);
+    try { await Viewers[v](rec); pane.querySelector(':scope > .vstate')?.remove(); }
+    catch (e) { this.viewerError(pane, rec, e); }
+    finally { clearTimeout(wait); pane.querySelector(':scope > .vstate.load')?.remove(); }
+  },
+  /* one consistent error state for every viewer: what happened, and what you can do about it */
+  viewerError(pane, rec, e) {
+    pane.querySelector(':scope > .vstate')?.remove();
+    const d = document.createElement('div'); d.className = 'vstate err'; d.setAttribute('role', 'alert');
+    d.innerHTML = `<div class="empty"><h2>Can’t open this file</h2><p>${esc((e && e.message) || 'Something went wrong while reading it.')}</p>
+      <div class="acts"><button class="btn primary" data-a="retry">Try again</button><button class="btn" data-a="ext">Open with system app</button><button class="btn ghost" data-a="back">Go back</button></div></div>`;
+    pane.appendChild(d); d.querySelector('[data-a=retry]').focus();
+    d.onclick = ev => {
+      const a = ev.target.closest('[data-a]')?.dataset.a;
+      if (a === 'retry') this.routeOpen(rec.path); else if (a === 'back') this.back();
+      else if (a === 'ext') api('/api/fs/external', {json: {path: rec.path, action: 'open'}}).catch(er => toast(er.message, true));
+    };
   },
   paintDocbar(rec, v) {
     const i = this.queue.indexOf(rec.path), multi = this.queue.length > 1 && i >= 0;
@@ -113,21 +142,38 @@ const App = {
     try { [s, st] = await Promise.all([api('/api/library/summary'), api('/api/study/summary').catch(() => null)]); }
     catch (e) { page.innerHTML = `<div class="page"><div class="empty"><h2>Cannot load the workspace</h2><p>${esc(e.message)}</p></div></div>`; return; }
     const pct = st && st.goal_minutes ? Math.min(100, Math.round(100 * st.today_minutes / st.goal_minutes)) : 0;
+    const cont = s.recents.filter(r => r.exists !== false).slice(0, 3);
+    const materials = s.categories.filter(c => c.id !== 'recent');
+    const workspace = [['#/notes', 'note', 'Notes', 'Write and organise what you learn'], ['#/annotations', 'highlighter', 'Annotations', 'Every highlight and comment in one place'], ['#/planner', 'clock', 'Planner', 'Plan today, revision and exams'], ['#/toolkit', 'code', 'Toolkit', 'Visualise algorithms and practise']];
     page.innerHTML = `<div class="page dash">
-      <h1>What would you like to study today?</h1>
-      <p class="sub">Choose a category, or search your files, notes and annotations.</p>
-      <div class="searchbox"><i data-icon="search"></i><input id="gsearch" data-search type="search" placeholder="Search files, notes, annotations   ( / )" autocomplete="off" aria-label="Search"><div class="results" id="gresults" hidden></div></div>
-      <div class="cards">${s.categories.map(c => `<button class="card" data-cat="${c.id}">
+      <section class="hero"><h1>Your space to think, learn, and build.</h1>
+        <p class="sub">Everything you need to explore ideas, understand code, and study without distractions.</p>
+        <div class="hero-acts"><button class="btn primary lg" id="heroOpen">${icon('external')}Open a document</button><a class="btn lg" href="#/library/modified">${icon('library')}Explore your library</a></div>
+        <div class="searchbox"><i data-icon="search"></i><input id="gsearch" data-search type="search" placeholder="Search files, notes, annotations   ( / )" autocomplete="off" aria-label="Search"><div class="results" id="gresults" hidden></div></div></section>
+      ${cont.length ? `<div class="sec-head"><h2>Continue studying</h2><a href="#/recent">View all</a></div>
+        <div class="resume">${cont.map(r => this.resumeHtml(r)).join('')}</div>` : ''}
+      ${s.pinned && s.pinned.length ? `<div class="sec-head"><h2>Pinned</h2></div><div class="rows">${s.pinned.map(r => this.rowHtml(r)).join('')}</div>` : ''}
+      <div class="sec-head"><h2>Explore your materials</h2></div>
+      <div class="cards">${materials.map(c => `<button class="card" data-cat="${c.id}">
         <span class="tile">${icon(c.icon)}</span><b>${esc(c.name)}</b><span class="desc">${esc(c.description)}</span>
         <span class="meta">${c.recent ? c.recent + ' recent' : 'No recent files'}${c.available ? '' : ' · opens in system app'}</span></button>`).join('')}</div>
-      ${st ? `<a class="strip" href="#/planner"><div><b>${st.today_minutes}</b><span>of ${st.goal_minutes} min today</span><div class="bar"><i style="width:${pct}%"></i></div></div>
+      <div class="sec-head"><h2>Your workspace</h2></div>
+      <div class="work">${workspace.map(([h, ic, n, d]) => `<a class="work-item" href="${h}"><span class="tile">${icon(ic)}</span><span><b>${n}</b><small>${d}</small></span></a>`).join('')}</div>
+      ${st ? `<div class="sec-head"><h2>Study overview</h2><a href="#/planner">Open planner</a></div>
+        <a class="strip" href="#/planner"><div><b>${st.today_minutes}</b><span>of ${st.goal_minutes} min today</span><div class="bar"><i style="width:${pct}%"></i></div></div>
         <div><b>${st.streak}</b><span>day streak</span></div><div><b>${st.due_questions}</b><span>questions to review</span></div>
         <div><b>${st.todos_open}</b><span>open to-dos</span></div>${st.next_exam ? `<div><b>${esc(st.next_exam.name)}</b><span>${esc(st.next_exam.date)}</span></div>` : ''}</a>` : ''}
-      ${s.pinned && s.pinned.length ? `<div class="sec-head"><h2>Pinned</h2></div><div class="rows">${s.pinned.map(r => this.rowHtml(r)).join('')}</div>` : ''}
-      <div class="sec-head"><h2>Recently opened</h2><a href="#/recent">View all</a></div>
-      ${s.recents.length ? `<div class="rows">${s.recents.map(r => this.rowHtml(r)).join('')}</div>` : `<div class="rows"><div class="noresult">Nothing yet. Pick a category above to open your first file.</div></div>`}
     </div>`;
     hydrateIcons(page);
+    $('#heroOpen').onclick = async e => {
+      const btn = e.currentTarget; btn.disabled = true;
+      try {
+        const r = await api('/api/fs/native', {json: {mode: 'file'}});
+        if (r.skipped) toast(r.skipped + ' file(s) skipped: outside your home folder.', true);
+        if (r.paths.length) this.open(r.paths[0]);
+      } catch { this.go('#/browse/pdf'); }                       // no system chooser available: use the in-app browser
+      finally { btn.disabled = false; }
+    };
     page.onclick = e => {
       const c = e.target.closest('.card'); if (c) return this.go(c.dataset.cat === 'recent' ? '#/recent' : '#/browse/' + c.dataset.cat);
       const hit = e.target.closest('[data-go]'); if (hit) { $('#gresults').hidden = true; return this.go(hit.dataset.go); }
@@ -151,6 +197,17 @@ const App = {
     input.oninput = run;
     input.onkeydown = e => { if (e.key === 'Enter') { const r = box.querySelector('.row:not(.missing)'); if (r) r.click(); } if (e.key === 'Escape') { box.hidden = true; input.blur(); } };
   },
+  /* a "continue studying" card; PDFs show how far you have read (page number kept in this browser) */
+  resumeHtml(r) {
+    const dir = r.path.replace(/[/\\][^/\\]+$/, '').split(/[/\\]/).pop();
+    const pr = r.category === 'pdf' ? store.get('pdf:' + r.path, null) : null;
+    const pct = pr && pr.page && pr.pages ? Math.min(100, Math.round(100 * pr.page / pr.pages)) : null;
+    const note = pr && pr.page ? (pr.pages ? `Page ${pr.page} of ${pr.pages}` : `Page ${pr.page}`) : (r.last_opened ? 'Opened ' + timeAgo(r.last_opened) : '');
+    return `<div class="rcard row-card" data-path="${esc(r.path)}" data-exists="true" tabindex="0" role="button" aria-label="Open ${esc(r.name)}">
+      <span class="tile">${icon(fileIcon(r.category))}</span><b class="nm" title="${esc(r.name)}">${esc(r.name)}</b><span class="where">${esc(dir)}</span>
+      ${pct !== null ? `<span class="prog" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Reading progress"><i style="width:${pct}%"></i></span>` : ''}
+      <span class="meta">${esc(note)}${pr && r.last_opened ? ' · ' + timeAgo(r.last_opened) : ''}</span></div>`;
+  },
   rowHtml(r, search) {
     const dir = r.path.replace(/[/\\][^/\\]+$/, '');
     return `<div class="row${r.exists === false ? ' missing' : ''}" data-path="${esc(r.path)}" data-exists="${r.exists !== false}" tabindex="0">
@@ -159,9 +216,9 @@ const App = {
       ${r.favorite ? `<span class="star-on" title="Favorite">${icon('star-fill')}</span>` : ''}</div>`;
   },
   rowClick(e) {
-    const row = e.target.closest('.row'); if (!row || !row.dataset.path) return;
+    const row = e.target.closest('.row, .rcard'); if (!row || !row.dataset.path) return;
     if (row.dataset.exists === 'false') return toast('This file no longer exists at its old location.', true);
-    const rows = $$('.row[data-path]', row.parentElement).filter(r => r.dataset.exists !== 'false').map(r => r.dataset.path);
+    const rows = $$('.row[data-path], .rcard[data-path]', row.parentElement).filter(r => r.dataset.exists !== 'false').map(r => r.dataset.path);
     this.open(row.dataset.path, rows);
   },
 
@@ -253,12 +310,13 @@ const App = {
     path = path || store.get('lastDir:' + catId, '');
     const page = $('#page');
     page.innerHTML = `<div class="page wide">
-      <div class="bhead"><h1>${icon(cat.icon)}${esc(cat.name)}</h1><span class="spacer"></span>
+      <div class="bhead"><div><h1>${icon(cat.icon)}${esc(cat.name)}</h1><p class="bsub">${esc(cat.description)}</p></div><span class="spacer"></span>
         <button class="btn" id="nativeBtn" title="Use your operating system's file chooser">${icon('external')}Choose from computer…</button></div>
       <div class="btools"><div class="crumbs" id="crumbs"></div>
         <input id="bq" data-search type="search" placeholder="Search in this folder   ( / )" style="width:230px" aria-label="Search in this folder">
         <select id="bsort" aria-label="Sort by"><option value="name">Sort: Name</option><option value="date">Sort: Date modified</option><option value="size">Sort: Size</option></select>
         <button class="icon-btn" id="border" title="Reverse sort order" aria-label="Reverse sort order"></button></div>
+      <div class="brecent" id="brecent" hidden></div>
       <div class="chips" id="bchips"></div>
       <div class="bsplit"><div class="blist" id="blist"></div><aside class="bprev" id="bprev"><div class="noresult">Select a file to preview it.</div></aside></div>
       <div class="bfoot"><span class="info" id="binfo"></span><button class="btn primary" id="bopen" disabled>${icon('check')}Open File</button></div></div>`;
@@ -273,6 +331,13 @@ const App = {
     $('#blist').ondblclick = e => { const r = e.target.closest('tr[data-path]'); if (r) { if (r.dataset.dir) this.go('#/browse/' + catId + '?path=' + enc(r.dataset.path)); else this.openSelection(r.dataset.path); } };
     $('#bchips').onclick = e => { const c = e.target.closest('.chip'); if (c) { bs.ext = c.dataset.e || null; this.paintList(); } };
     $('#crumbs').onclick = e => { const b = e.target.closest('button'); if (b) this.go('#/browse/' + catId + '?path=' + enc(b.dataset.p)); };
+    api('/api/library/recent?category=' + catId).then(items => {          // quick access to what you opened last in this category
+      const box = $('#brecent'), list = items.filter(i => i.exists !== false).slice(0, 4);
+      if (!box || !list.length) return;
+      box.innerHTML = '<span class="lbl">Recent</span>' + list.map(i => `<button class="rchip" data-path="${esc(i.path)}" title="${esc(i.path)}">${icon(fileIcon(i.category))}<span>${esc(i.name)}</span></button>`).join('');
+      box.hidden = false;
+      box.onclick = e => { const b = e.target.closest('.rchip'); if (b) this.open(b.dataset.path, list.map(x => x.path)); };
+    }).catch(() => {});
     await this.loadDir(path);
   },
   async loadDir(path) {
@@ -305,7 +370,7 @@ const App = {
       <td>${bs.multi ? `<input type="checkbox" aria-label="Select ${esc(f.name)}" ${bs.sel.has(f.path) ? 'checked' : ''}>` : ''}</td>
       <td class="name" title="${esc(f.name)}">${icon(fileIcon(f.category))}${esc(f.name)}</td><td class="ex">${esc(f.ext.slice(1))}</td><td class="sz">${fmtSize(f.size)}</td><td class="dt">${fmtDate(f.mtime)}</td></tr>`).join('');
     $('#blist').innerHTML = `<table class="files"><thead><tr><th style="width:36px"></th><th>Name</th><th>Type</th><th>Size</th><th>Modified</th></tr></thead><tbody>${up}${rowsD}${rowsF}</tbody></table>` +
-      (!d.dirs.length && !files.length ? `<div class="empty"><h2>${bs.q ? 'No matching files' : 'No supported files here'}</h2><p>${bs.q ? 'Try a different search.' : 'Open a sub-folder, go up, or use “Choose from computer…”.'}</p></div>` : '') +
+      (!files.length ? `<div class="empty${d.dirs.length ? ' slim' : ''}"><h2>${bs.q ? 'No matching files' : d.dirs.length ? 'No files in this folder itself' : 'No supported files here'}</h2><p>${bs.q ? 'Try a different search.' : d.dirs.length ? 'Open one of the folders above, or go up.' : 'Go up a folder, or use “Choose from computer…”.'}</p></div>` : '') +
       (d.truncated ? '<div class="noresult">Showing the first 3000 files. Use search to narrow down.</div>' : '');
     $$('th', $('#blist')).forEach((th, i) => { const k = ['', 'name', '', 'size', 'date'][i]; if (k) th.onclick = () => { if (bs.sort === k) bs.order = bs.order === 'asc' ? 'desc' : 'asc'; else { bs.sort = k; bs.order = 'asc'; } $('#bsort').value = k; $('#border').innerHTML = icon(bs.order === 'asc' ? 'asc' : 'desc'); this.loadDir(d.path); }; });
     this.paintFoot();
@@ -375,7 +440,7 @@ const App = {
         <div class="set-row"><div class="lbl">Back up your study data<small>Notes, annotations, planner, practice questions, tags and collections as one JSON file. Your original files are not included.</small></div><a class="btn" href="/api/backup" download>Download backup</a></div>
         <div class="set-row"><div class="lbl">Restore from a backup<small>Merges the backup into what you already have. Nothing is deleted, and restoring twice does not create duplicates.</small></div><input id="restoreFile" type="file" accept=".json,application/json" hidden><button class="btn" id="restoreBtn">Choose a backup file…</button></div></div>
       <div class="set-sec"><h2>Keyboard shortcuts</h2><table class="keys" style="width:100%;border-collapse:collapse">
-        ${[['Ctrl/⌘ + K', 'Command palette: jump anywhere, run actions, search everything'], ['/', 'Focus the search box'], ['Esc', 'Go back from a document'], ['[  and  ]', 'Previous / next file in the current selection'], ['Ctrl/⌘ + B', 'Collapse the navigation'], ['Ctrl/⌘ + F', 'Search inside JSON and code files'], ['Ctrl/⌘ + G', 'Go to line (code)'], ['↑ ↓  Enter', 'Move and open in the file browser']].map(([k, d]) => `<tr><td><kbd>${k}</kbd></td><td>${d}</td></tr>`).join('')}</table></div></div>`;
+        ${this.SHORTCUTS.map(([k, d]) => `<tr><td><kbd>${k}</kbd></td><td>${d}</td></tr>`).join('')}</table></div></div>`;
     $('#themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; Theme.set(b.dataset.t); $$('#themeSeg button').forEach(x => x.classList.toggle('active', x === b)); };
     $('#startSave').onclick = async () => { try { await api('/api/settings', {method: 'PUT', json: {start_folder: $('#startIn').value.trim()}}); this._cats = null; store.set('lastDir:code', ''); toast('Start folder saved'); } catch (e) { toast(e.message, true); } };
     $('#startPick').onclick = async () => { try { const r = await api('/api/fs/native', {json: {mode: 'folder'}}); if (r.paths[0]) $('#startIn').value = r.paths[0]; } catch (e) { toast(e.message, true); } };
@@ -400,6 +465,7 @@ const App = {
       if (inDoc && !typing() && !$('.cmt.edit')) this.back(); return;
     }
     if (typing()) return;
+    if (e.key === '?') { e.preventDefault(); return this.showShortcuts(); }
     if (e.key === '/') { const s = $$('input[data-search]').find(i => i.offsetParent); if (s) { e.preventDefault(); s.focus(); } }
     else if (inDoc && e.key === '[') this.step(-1);
     else if (inDoc && e.key === ']') this.step(1);

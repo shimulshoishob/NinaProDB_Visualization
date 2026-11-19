@@ -1,13 +1,12 @@
 <section class="vpane" id="v-docx" hidden>
   <div class="toolbar">
+    <button class="icon-btn" id="docToc" title="Show or hide the contents" aria-label="Contents" aria-pressed="true"><i data-icon="list"></i></button>
     <span class="badge" id="docInfo"></span><span class="spacer"></span>
-    <input id="docQ" type="search" placeholder="Find in document   (Ctrl+F)" style="width:210px" aria-label="Find in document">
+    <input id="docQ" type="search" placeholder="Find in document" title="Find in document  (Ctrl+F)" style="width:180px" aria-label="Find in document">
     <span class="badge" id="docQInfo" hidden></span>
-    <button class="icon-btn" id="docQPrev" aria-label="Previous match"><i data-icon="chevUp"></i></button>
-    <button class="icon-btn" id="docQNext" aria-label="Next match"><i data-icon="chevDown"></i></button>
-    <button class="btn ghost" id="docFontDn" title="Smaller text">A−</button><button class="btn ghost" id="docFontUp" title="Larger text">A+</button>
-    <button class="btn ghost" id="docToc"><i data-icon="list"></i>Contents</button>
-    <button class="icon-btn" id="docPrint" title="Print / save as PDF" aria-label="Print"><i data-icon="print"></i></button>
+    <button class="icon-btn" id="docQPrev" title="Previous match" aria-label="Previous match" hidden><i data-icon="chevUp"></i></button>
+    <button class="icon-btn" id="docQNext" title="Next match" aria-label="Next match" hidden><i data-icon="chevDown"></i></button>
+    <button class="icon-btn" id="docMore" title="More actions" aria-label="More actions" aria-haspopup="menu"><i data-icon="more"></i></button>
   </div>
   <div class="doc-body"><div id="docScroll"><article id="docArticle" class="reading"></article></div><nav id="docNav" hidden></nav></div>
 </section>

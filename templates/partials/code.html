@@ -1,49 +1,55 @@
 <section class="vpane" id="v-code" hidden>
-  <div class="toolbar">
-    <span class="title" id="codeName"></span><span class="badge accent" id="lang"></span><span class="badge" id="codeMeta"></span><span class="badge warn" id="codeMod" hidden>modified copy</span>
+  <div class="toolbar" id="codeBar">
+    <button class="icon-btn" id="codeNavBtn" title="Show or hide the side panel" aria-label="Toggle side panel" aria-pressed="true"><i data-icon="panel"></i></button>
+    <span class="title" id="codeName"></span><span class="badge accent" id="lang"></span>
+    <input id="langIn" list="langs" placeholder="Language…" style="width:104px" title="Override the detected language" aria-label="Language"><datalist id="langs"></datalist>
+    <span class="badge" id="codeMeta"></span><span class="badge warn" id="codeMod" hidden>modified copy</span>
     <span class="spacer"></span>
-    <input id="langIn" list="langs" placeholder="Language…" style="width:118px" title="Override the detected language" aria-label="Language"><datalist id="langs"></datalist>
-    <span class="grp">
-      <button class="icon-btn" id="fontDn" title="Smaller text" aria-label="Smaller text">A−</button><button class="icon-btn" id="fontUp" title="Larger text" aria-label="Larger text">A+</button>
-      <button class="btn ghost" id="wrapBtn" title="Toggle line wrapping">Wrap</button>
-      <button class="icon-btn" id="foldAll" title="Fold all blocks" aria-label="Fold all"><i data-icon="fold"></i></button>
-      <button class="icon-btn" id="unfoldAll" title="Unfold all blocks" aria-label="Unfold all"><i data-icon="unfold"></i></button>
-    </span>
     <button class="btn ghost" id="findBtn" title="Find and replace (Ctrl+F)"><i data-icon="search"></i>Find</button>
-    <button class="btn ghost" id="gotoBtn" title="Go to line (Ctrl+G)">Go to line</button>
-    <button class="btn ghost" id="copyAll" title="Copy the whole file">Copy</button>
-    <button class="btn" id="exportPdf" title="Print or save as PDF, including your highlights and comments"><i data-icon="print"></i>Export PDF</button>
-  </div>
-  <div class="toolbar findbar" id="findBar" hidden>
-    <input id="find" type="search" placeholder="Find" style="width:200px" aria-label="Find"><button class="btn ghost" id="caseBtn" title="Match case">Aa</button>
-    <span class="badge" id="findInfo"></span>
-    <button class="icon-btn" id="fPrev" title="Previous match (Shift+Enter)" aria-label="Previous match"><i data-icon="chevUp"></i></button>
-    <button class="icon-btn" id="fNext" title="Next match (Enter)" aria-label="Next match"><i data-icon="chevDown"></i></button>
-    <span class="sepv"></span>
-    <input id="repl" type="text" placeholder="Replace with" style="width:200px" aria-label="Replace with">
-    <button class="btn" id="replOne">Replace</button><button class="btn" id="replAll">Replace all</button>
-    <span class="hint">Replace changes a working copy only. The original file is not modified unless you press Save.</span>
-    <span class="spacer"></span><button class="icon-btn" id="findClose" title="Close (Esc)" aria-label="Close find"><i data-icon="x"></i></button>
+    <button class="icon-btn" id="studyBtn" title="Study mode ( S )" aria-label="Study mode" aria-pressed="false"><i data-icon="book"></i></button>
+    <button class="icon-btn" id="codeMore" title="More: text size, wrap, theme, fold, go to line, export" aria-label="More actions" aria-haspopup="menu"><i data-icon="more"></i></button>
   </div>
   <div class="toolbar modbar" id="modBar" hidden>
     <span>The working copy has unsaved changes. Your original file is untouched.</span><span class="spacer"></span>
     <button class="btn" id="modRevert">Revert</button><button class="btn" id="modDownload">Download copy</button><button class="btn primary" id="modSave"><i data-icon="save"></i>Save to file…</button>
   </div>
-  <div class="toolbar sel" id="selBar" hidden>
-    <span>Lines <b id="selRange"></b></span>
-    <span class="seg" id="selStyle"><button data-s="highlight" class="active">Highlight</button><button data-s="underline">Underline</button></span>
-    <span id="selCats" title="Click a colour to mark the selected lines"></span>
-    <button class="btn primary" id="addCmt"><i data-icon="comment"></i>Comment</button>
-    <button class="btn" id="bmBtn"><i data-icon="bookmark"></i>Bookmark</button>
-    <button class="btn" id="toNotes" title="Add the selected lines to your notes"><i data-icon="note"></i>To notes</button>
-    <button class="btn ghost" id="copySel">Copy lines</button>
-    <button class="icon-btn" id="clearSel" aria-label="Clear selection"><i data-icon="x"></i></button>
-  </div>
   <div class="split">
-    <div id="codeBody" class="codebox" tabindex="0"></div>
+    <div class="cwrap" id="codeWrap">
+      <div id="codeBody" class="codebox hl" tabindex="0"></div>
+      <div id="findBar" class="findpanel" hidden role="search">
+        <div class="fp-row">
+          <button class="icon-btn" id="replToggle" title="Show replace (Ctrl+H)" aria-label="Show replace" aria-expanded="false"><i data-icon="chevDown"></i></button>
+          <input id="find" type="search" placeholder="Find" aria-label="Find"><button class="icon-btn" id="caseBtn" title="Match case" aria-label="Match case" aria-pressed="false">Aa</button>
+          <span class="badge" id="findInfo"></span>
+          <button class="icon-btn" id="fPrev" title="Previous match (Shift+Enter)" aria-label="Previous match"><i data-icon="chevUp"></i></button>
+          <button class="icon-btn" id="fNext" title="Next match (Enter)" aria-label="Next match"><i data-icon="chevDown"></i></button>
+          <button class="icon-btn" id="findClose" title="Close (Esc)" aria-label="Close find"><i data-icon="x"></i></button>
+        </div>
+        <div class="fp-row repl" id="replRow" hidden>
+          <input id="repl" type="text" placeholder="Replace with" aria-label="Replace with" title="Replace changes a working copy only. The original file is not modified unless you press Save.">
+          <button class="btn" id="replOne">Replace</button><button class="btn" id="replAll">Replace all</button>
+        </div>
+        <div class="fp-hint" id="replHint" hidden>Changes a working copy only. The original is untouched until you save.</div>
+      </div>
+      <div id="selBar" class="selpop" hidden role="toolbar" aria-label="Selected lines">
+        <span class="sp-where" title="Selected lines"><b id="selRange"></b></span>
+        <span class="seg" id="selStyle"><button data-s="highlight" class="active">Highlight</button><button data-s="underline">Underline</button></span>
+        <span id="selCats" title="Click a colour to mark the selected lines"></span>
+        <span class="sepv"></span>
+        <button class="btn primary" id="addCmt"><i data-icon="comment"></i>Comment</button>
+        <button class="icon-btn" id="bmBtn" title="Bookmark this line (B)" aria-label="Bookmark"><i data-icon="bookmark"></i></button>
+        <button class="icon-btn" id="toNotes" title="Add the selected lines to your notes" aria-label="Send to notes"><i data-icon="note"></i></button>
+        <button class="btn ghost" id="copySel">Copy</button>
+        <button class="icon-btn" id="clearSel" aria-label="Clear selection" title="Clear selection (Esc)"><i data-icon="x"></i></button>
+      </div>
+      <div id="codeFocusPill" hidden><span>Study mode</span><button class="icon-btn" id="codeFocusOff" title="Leave study mode (Esc)" aria-label="Leave study mode"><i data-icon="x"></i></button></div>
+    </div>
     <aside id="notes">
       <div class="seg" id="sideTabs"><button data-t="outline" class="active">Outline</button><button data-t="notes">Annotations <span class="badge" id="nCount">0</span></button></div>
-      <div id="outlineList" data-p="outline"></div>
+      <div id="outlinePane" data-p="outline">
+        <div class="ol-search"><input id="olQ" type="search" placeholder="Filter functions and classes" aria-label="Filter outline"></div>
+        <div id="outlineList"></div>
+      </div>
       <div id="annPanel" data-p="notes" hidden></div>
     </aside>
   </div>

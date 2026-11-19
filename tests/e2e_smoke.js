@@ -37,6 +37,8 @@
     App.open(root + '/' + path); await wait(2200);
     check('open ' + path, visible() === pane && document.querySelectorAll('#' + pane + ' ' + selector).length > 0, visible());
     check('accessible names ' + path, unnamed() === 0, unnamed() + ' unnamed controls');
+    if (path === 'markdown/welcome.md') { const ad = document.querySelector('#v-md .admonition'); check('markdown admonition stays in the page flow', ad && getComputedStyle(ad).position !== 'fixed'); }
+    if (path === 'code/example.py') { const k = document.querySelector('#v-code .t .k'), t = document.querySelector('#v-code .t'); check('code syntax colours applied', k && getComputedStyle(k).color !== getComputedStyle(t).color); }
   }
 
   // 3. keyboard shortcuts
@@ -45,6 +47,10 @@
   check('Ctrl+K opens the command palette', !!document.querySelector('.palette'));
   document.querySelector('#palQ').dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true})); await wait(150);
   check('Esc closes the palette', !document.querySelector('.palette'));
+  document.dispatchEvent(new KeyboardEvent('keydown', {key: '?', bubbles: true})); await wait(250);
+  check('? opens the shortcuts sheet', !!document.querySelector('.dlg .keys'));
+  document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true})); await wait(250);
+  check('Esc closes the shortcuts sheet', !document.querySelector('.dlg'));
   document.dispatchEvent(new KeyboardEvent('keydown', {key: '/', bubbles: true})); await wait(100);
   check('/ focuses the search box', document.activeElement.id === 'gsearch', document.activeElement.id);
   document.activeElement.blur();
