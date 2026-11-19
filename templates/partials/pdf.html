@@ -1,0 +1,38 @@
+<section class="vpane" id="v-pdf" hidden>
+  <div class="toolbar">
+    <button class="icon-btn" id="pdfNavBtn" title="Show or hide the side panel" aria-label="Toggle side panel"><i data-icon="panel"></i></button>
+    <span class="grp"><button class="icon-btn" id="pdfPrev" title="Previous page" aria-label="Previous page"><i data-icon="chevUp"></i></button>
+      <input id="pdfPage" type="number" min="1" value="1" aria-label="Page number"><span class="badge" id="pdfCount">/ 0</span>
+      <button class="icon-btn" id="pdfNext" title="Next page" aria-label="Next page"><i data-icon="chevDown"></i></button></span>
+    <span class="grp"><button class="icon-btn" id="pdfZoomOut" title="Zoom out ( - )" aria-label="Zoom out"><i data-icon="zoomOut"></i></button>
+      <select id="pdfZoom" aria-label="Zoom level"></select>
+      <button class="icon-btn" id="pdfZoomIn" title="Zoom in ( + )" aria-label="Zoom in"><i data-icon="zoomIn"></i></button>
+      <button class="icon-btn" id="pdfFitW" title="Fit to width ( 0 )" aria-label="Fit to width"><i data-icon="fitw"></i></button>
+      <button class="icon-btn" id="pdfFitP" title="Fit to page" aria-label="Fit to page"><i data-icon="fitp"></i></button>
+      <button class="icon-btn" id="pdfRotate" title="Rotate view 90°" aria-label="Rotate"><i data-icon="rotate"></i></button></span>
+    <span class="grp" id="pdfTools">
+      <button class="icon-btn tool active" data-tool="select" title="Select text (Esc)" aria-label="Select text"><i data-icon="pointer"></i></button>
+      <button class="icon-btn tool" data-tool="pen" title="Draw with a pen" aria-label="Pen"><i data-icon="pen"></i></button>
+      <button class="icon-btn tool" data-tool="note" title="Add a sticky note: click on the page" aria-label="Sticky note"><i data-icon="note"></i></button>
+      <span id="pdfCats" class="cats"></span>
+      <button class="icon-btn" id="pdfBookmark" title="Bookmark this page ( b )" aria-label="Bookmark this page"><i data-icon="bookmark"></i></button></span>
+    <span class="spacer"></span>
+    <input id="pdfQ" type="search" placeholder="Search in PDF   (Ctrl+F)" style="width:210px" aria-label="Search in PDF">
+    <span class="badge" id="pdfQInfo" hidden></span>
+    <button class="icon-btn" id="pdfQPrev" title="Previous match" aria-label="Previous match"><i data-icon="chevUp"></i></button>
+    <button class="icon-btn" id="pdfQNext" title="Next match" aria-label="Next match"><i data-icon="chevDown"></i></button>
+    <button class="icon-btn" id="pdfPrint" title="Print" aria-label="Print"><i data-icon="print"></i></button>
+    <button class="icon-btn" id="pdfExport" title="Download a copy with your annotations embedded" aria-label="Export annotated PDF"><i data-icon="download"></i></button>
+    <button class="icon-btn" id="pdfAnnBtn" title="Show or hide annotations" aria-label="Toggle annotations panel"><i data-icon="panelRight"></i></button>
+  </div>
+  <div class="pdf-body">
+    <aside id="pdfNav">
+      <div class="seg" id="pdfTabs"><button data-t="thumbs" class="active">Pages</button><button data-t="outline">Outline</button><button data-t="results">Results</button></div>
+      <div id="pdfSide"></div>
+    </aside>
+    <div id="pdfScroll" tabindex="0"><div id="pdfPages"></div><div id="pdfMsg"></div>
+      <div id="pdfSel" hidden><button data-m="highlight" title="Highlight" aria-label="Highlight"><i data-icon="highlighter"></i></button><button data-m="underline" title="Underline" aria-label="Underline"><i data-icon="underline"></i></button><button data-m="strikeout" title="Strikethrough" aria-label="Strikethrough"><i data-icon="strike"></i></button><button data-m="comment" title="Highlight and comment" aria-label="Comment"><i data-icon="comment"></i></button><button data-m="notes" title="Send the selected text to your notes" aria-label="Send to notes"><i data-icon="note"></i></button><span class="sepv"></span><span id="pdfSelCats"></span></div>
+      <div id="pdfPop" hidden></div></div>
+    <aside id="pdfAnn"></aside>
+  </div>
+</section>

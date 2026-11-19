@@ -1,6 +1,12 @@
 .venv/
 __pycache__/
-uploads/
-data/*.mat
 *.pyc
 .DS_Store
+*.tmp
+# your personal code-viewer annotations
+comments.json
+# personal study database (recents, favorites, settings)
+workspace.db
+workspace.db-wal
+workspace.db-shm
+comments.json.migrated

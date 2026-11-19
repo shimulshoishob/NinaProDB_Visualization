@@ -1,0 +1,17 @@
+<section class="vpane" id="v-md" hidden>
+      <div class="toolbar">
+        <span class="title" id="mdName"></span><span class="badge" id="mdMeta"></span>
+        <span class="spacer"></span>
+        <div class="seg" id="mdModes"><button data-m="preview" class="active">Preview</button><button data-m="split">Split</button><button data-m="source">Source</button></div>
+        <button class="btn" id="tocBtn" title="Table of contents">☰ Contents</button>
+        <button class="btn" id="copySrc">Copy source</button>
+        <button class="btn" id="exportHtml">Export HTML</button>
+        <button class="btn" id="printBtn">Print / PDF</button>
+      </div>
+      <div id="progress"><div></div></div>
+      <div id="panes">
+        <div id="srcPane"><textarea id="src" spellcheck="false" title="Edit to preview live (not saved to disk)"></textarea><div class="hint">Live scratch editor — changes preview instantly but are <b>not saved</b> to the file.</div></div>
+        <div id="prevPane"><article id="doc" class="markdown-body"></article></div>
+        <nav id="toc" hidden></nav>
+      </div>
+    </section>

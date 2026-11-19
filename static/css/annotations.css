@@ -1,0 +1,17 @@
+/* Annotation palette + panel (shared by PDF, code and the global Annotations page) */
+.cdot{width:16px;height:16px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0;vertical-align:middle;margin:0 2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.cdot:hover{transform:scale(1.15)}.cdot.on{border-color:var(--fg)}
+.sepv{display:inline-block;width:1px;height:18px;background:var(--line);margin:0 4px;vertical-align:middle}
+.ap{display:flex;flex-direction:column;min-height:0;background:var(--bg2)}
+.ap-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.ap-tools{display:flex;gap:6px;padding:8px 10px 4px}.ap-tools input{flex:1;min-width:0}.ap-tools select{padding:4px 6px;width:118px}
+.ap-chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:4px 10px 8px}
+.ap-list{flex:1;overflow:auto;padding:4px 10px 14px}
+.ap-item{border:1px solid var(--line);border-left:4px solid var(--ac);border-radius:var(--r-md);background:var(--bg);padding:8px 10px;margin-bottom:8px;cursor:pointer}
+.ap-item:hover,.ap-item:focus-visible{border-color:var(--ac)}
+.ap-top{display:flex;align-items:center;gap:6px;color:var(--fg2);font-size:var(--fs-sm)}.ap-top .ic{width:15px;height:15px;color:var(--ac)}
+.ap-top .icon-btn{padding:2px;opacity:0}.ap-item:hover .ap-top .icon-btn,.ap-item:focus-within .ap-top .icon-btn{opacity:1}
+.ap-where{font-weight:600;color:var(--fg)}
+.ap-quote{margin-top:4px;font-size:var(--fs-sm);color:var(--fg2);border-left:2px solid var(--line);padding-left:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.ap-text{margin-top:4px;white-space:pre-wrap;word-break:break-word;font-size:var(--fs-md)}
+.ap-date{margin-top:4px;color:var(--fg2);font-size:var(--fs-xs)}

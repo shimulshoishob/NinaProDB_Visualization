@@ -1,0 +1,46 @@
+#v-md #progress{height:3px;background:transparent}
+#v-md #progress div{height:100%;width:0;background:var(--accent)}
+#v-md #panes{flex:1;display:flex;min-height:0}
+#v-md #srcPane{display:none;flex:1;flex-direction:column;border-right:1px solid var(--line);min-width:0}
+#v-md #srcPane textarea{flex:1;border:0;border-radius:0;resize:none;padding:16px;font:var(--fs-md)/1.6 ui-monospace,Menlo,monospace;background:var(--bg2);tab-size:4}
+#v-md #srcPane textarea:focus{box-shadow:none}
+#v-md .hint{padding:5px 14px;font-size:var(--fs-sm);color:var(--fg2);border-top:1px solid var(--line)}
+#v-md #prevPane{flex:1;overflow:auto;scroll-behavior:smooth;min-width:0}
+#v-md[data-mode=split] #srcPane,#v-md[data-mode=source] #srcPane{display:flex}
+#v-md[data-mode=source] #prevPane{display:none}
+#v-md #toc{width:240px;flex:none;overflow:auto;border-left:1px solid var(--line);padding:14px 10px;font-size:var(--fs-md);background:var(--bg2)}
+#v-md #toc a{display:block;padding:3px 8px;color:var(--fg2);text-decoration:none;border-left:2px solid transparent;border-radius:0 var(--r-sm) var(--r-sm) 0}
+#v-md #toc a:hover{color:var(--fg);background:var(--hover)}
+#v-md #toc a.on{color:var(--accent);border-left-color:var(--accent);background:var(--sel);font-weight:600}
+#v-md #toc h4{margin:0 0 8px;color:var(--fg2);font-size:var(--fs-xs);letter-spacing:.8px;text-transform:uppercase}
+#v-md .markdown-body{max-width:860px;margin:0 auto;padding:30px 36px 80px;font-size:var(--fs-lg);line-height:1.7;word-wrap:break-word}
+#v-md .markdown-body h1,#v-md .markdown-body h2{border-bottom:1px solid var(--line);padding-bottom:.3em}
+#v-md .markdown-body h1,#v-md .markdown-body h2,#v-md .markdown-body h3,#v-md .markdown-body h4{margin:1.6em 0 .6em;line-height:1.25;position:relative}
+#v-md .markdown-body h1{font-size:2em}
+#v-md .markdown-body h2{font-size:1.5em}
+#v-md .markdown-body h3{font-size:1.25em}
+#v-md .markdown-body a{color:var(--accent)}
+#v-md .headerlink{opacity:0;margin-left:8px;text-decoration:none;font-weight:400}
+#v-md h1:hover .headerlink,#v-md h2:hover .headerlink,#v-md h3:hover .headerlink,#v-md h4:hover .headerlink{opacity:.6}
+#v-md .markdown-body img{max-width:100%;border-radius:var(--r-sm)}
+#v-md .markdown-body table{border-collapse:collapse;display:block;overflow:auto;max-width:100%}
+#v-md .markdown-body th,#v-md .markdown-body td{border:1px solid var(--line);padding:7px 14px}
+#v-md .markdown-body tr:nth-child(2n){background:var(--bg2)}
+#v-md .markdown-body th{background:var(--bg3)}
+#v-md .markdown-body blockquote{margin:1em 0;padding:.2em 1em;border-left:4px solid var(--line);color:var(--fg2)}
+#v-md .markdown-body code{background:var(--bg3);padding:.15em .4em;border-radius:var(--r-sm);font-size:.88em}
+#v-md .markdown-body pre,#v-md .markdown-body .hl{position:relative}
+#v-md .markdown-body .hl,#v-md .markdown-body pre{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;overflow:auto;font-size:var(--fs-md);line-height:1.55}
+#v-md .markdown-body pre code,#v-md .markdown-body .hl code{background:none;padding:0;font-size:inherit}
+#v-md .markdown-body .hl pre{border:0;padding:0;margin:0;background:none}
+#v-md .copy{position:absolute;top:8px;right:8px;opacity:0;font-size:var(--fs-xs);padding:3px 8px}
+#v-md .hl:hover .copy,#v-md pre:hover>.copy{opacity:1}
+#v-md .markdown-body hr{border:0;border-top:1px solid var(--line);margin:2em 0}
+#v-md .markdown-body li.task-list-item{list-style:none;margin-left:-1.3em}
+#v-md .markdown-body mark{background:var(--syn-hit);color:var(--fg);padding:0 3px;border-radius:var(--r-xs)}
+#v-md .admonition{margin:1em 0;padding:.6em 1em;border-left:4px solid var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent);border-radius:0 var(--r-md) var(--r-md) 0}
+#v-md .admonition.warning,#v-md .admonition.danger{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+#v-md .admonition.danger{border-color:var(--danger)}
+#v-md .admonition.tip,#v-md .admonition.success{border-color:var(--ok)}
+#v-md .admonition-title{font-weight:700;margin:0 0 .3em}
+#v-md .footnote{font-size:.9em;color:var(--fg2)}

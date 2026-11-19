@@ -1,0 +1,6 @@
+[
+  {"id": 1, "name": "Ada Lovelace", "email": "ada@example.com", "active": true, "score": 98.5, "tags": ["math", "poetry"], "address": {"city": "London", "zip": "N1"}},
+  {"id": 2, "name": "Alan Turing", "email": "alan@example.com", "active": true, "score": 91.2, "tags": ["crypto"], "address": {"city": "Wilmslow", "zip": "SK9"}},
+  {"id": 3, "name": "Grace Hopper", "email": "grace@example.com", "active": false, "score": 99.9, "tags": ["compilers", "navy"], "address": {"city": "New York", "zip": "10001"}},
+  {"id": 4, "name": "Linus T", "email": null, "active": true, "score": 77, "tags": [], "address": null}
+]

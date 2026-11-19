@@ -1,0 +1,4 @@
+{"app": {"name": "NinaPro Explorer", "version": "1.2.0", "debug": false},
+ "database": {"host": "localhost", "port": 5432, "pools": [{"name": "read", "size": 10}, {"name": "write", "size": 2}]},
+ "features": {"export_csv": true, "dark_mode": true, "limits": {"max_rows": 1000000, "timeout": 30.5}},
+ "notes": null}

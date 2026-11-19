@@ -1,0 +1,29 @@
+<section class="vpane" id="v-sql" hidden>
+      <div id="scriptView" hidden class="col">
+        <div class="toolbar">
+          <span class="title" id="sName"></span><span class="badge" id="sMeta"></span><span class="spacer"></span>
+          <div class="seg" id="fmtSeg"><button data-f="orig" class="active">Original</button><button data-f="pretty">Formatted</button></div>
+          <button class="btn" id="sCopy">Copy</button>
+          <button class="btn primary" id="sRun" title="Executes the script in a throw-away in-memory SQLite database">▶ Run in sandbox</button>
+        </div>
+        <div id="sBanner" hidden></div>
+        <div class="split"><div id="sqlCode" class="codebox"></div><nav id="outline"></nav></div>
+      </div>
+      <div id="dbView" hidden class="col">
+        <div class="toolbar">
+          <span class="title" id="dName"></span><span class="badge" id="dMeta"></span><span class="spacer"></span>
+          <button class="btn" id="backScript" hidden>← Back to script</button>
+        </div>
+        <div id="objs"></div>
+        <div class="toolbar sub">
+          <div class="seg" id="dTabs"><button data-t="data" class="active">Data</button><button data-t="structure">Structure</button><button data-t="query">SQL console</button></div>
+          <span id="dataTools" style="display:contents">
+            <input id="dFilter" type="search" placeholder="Filter rows…" style="width:200px">
+            <select id="pageSize"><option>50</option><option selected>100</option><option>500</option></select>
+            <button class="icon-btn" id="pPrev">◀</button><span class="badge" id="pInfo"></span><button class="icon-btn" id="pNext">▶</button>
+          </span>
+          <span class="spacer"></span><button class="btn" id="dExport">Export CSV</button>
+        </div>
+        <div id="dBody"></div>
+      </div>
+    </section>

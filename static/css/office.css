@@ -1,0 +1,30 @@
+/* Shared by Word, image and slide viewers */
+#v-image #imgStage{flex:1;overflow:auto;background:var(--bg3);display:grid;place-items:center;padding:24px;outline:none}
+#v-image #imgStage.big{display:block}
+#v-image img{display:block;margin:auto;background:repeating-conic-gradient(#0000000d 0 25%,transparent 0 50%) 50%/16px 16px;box-shadow:var(--shadow-page);transform-origin:center}
+#v-docx .doc-body{flex:1;min-height:0;display:flex}
+#v-docx #docScroll{flex:1;overflow:auto;background:var(--bg3);min-width:0}
+#v-docx .reading{max-width:820px;margin:28px auto 70px;background:var(--bg);padding:56px 64px;box-shadow:var(--shadow-page);font-size:var(--docfs,16px);line-height:var(--lh-read);border-radius:var(--r-xs)}
+#v-docx .reading h1,#v-docx .reading h2,#v-docx .reading h3{line-height:1.25;margin:1.4em 0 .5em}#v-docx .reading h1{font-size:1.9em}#v-docx .reading h2{font-size:1.45em}#v-docx .reading h3{font-size:1.2em}
+#v-docx .reading table{border-collapse:collapse;margin:1em 0;max-width:100%}#v-docx .reading td,#v-docx .reading th{border:1px solid var(--line);padding:6px 12px}
+#v-docx .reading img{max-width:100%;height:auto}#v-docx .reading a{color:var(--accent)}
+#v-docx mark{background:var(--syn-hit);color:var(--fg);border-radius:var(--r-xs)}#v-docx mark.on{background:var(--syn-hit-on)}
+#v-docx #docNav{width:240px;flex:none;overflow:auto;padding:14px 10px;border-left:1px solid var(--line);background:var(--bg2);font-size:var(--fs-md)}
+#v-docx #docNav a{display:block;padding:3px 8px;color:var(--fg2);text-decoration:none;border-left:2px solid transparent}
+#v-docx #docNav a:hover{color:var(--fg);background:var(--hover)}#v-docx #docNav a.on{color:var(--accent);border-left-color:var(--accent);background:var(--sel)}
+#v-docx #docNav h4{margin:0 0 8px;font-size:var(--fs-xs);letter-spacing:.8px;color:var(--fg2);text-transform:uppercase}
+#v-pptx .ppt-body{flex:1;min-height:0;display:flex}
+#v-pptx #pptList{width:190px;flex:none;overflow:auto;padding:10px;border-right:1px solid var(--line);background:var(--bg2)}
+#v-pptx .st{display:flex;gap:8px;width:100%;text-align:left;border:2px solid transparent;border-radius:var(--r-sm);background:none;padding:6px;cursor:pointer;font-size:var(--fs-sm);color:var(--fg2);line-height:1.3}
+#v-pptx .st:hover{background:var(--hover)}#v-pptx .st.on{border-color:var(--accent);color:var(--fg)}#v-pptx .st b{color:var(--fg2);min-width:1.4em}
+#v-pptx #pptMain{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg3)}
+#v-pptx #pptStage{flex:1;min-height:0;display:grid;place-items:center;padding:20px;overflow:hidden}
+#v-pptx #pptSlide{position:relative;background:#fff;color:#111;box-shadow:var(--shadow-page);overflow:hidden;container-type:inline-size}
+#v-pptx .sh{position:absolute;overflow:hidden;line-height:1.2}
+#v-pptx .sh p{margin:0 0 .35em}#v-pptx .sh img{width:100%;height:100%;object-fit:contain;display:block}
+#v-pptx .sh table{border-collapse:collapse;width:100%;font-size:1.6cqw}#v-pptx .sh td{border:1px solid #bbb;padding:.4em .6em}
+#v-pptx #pptNoteBox{max-height:28%;overflow:auto;padding:12px 18px;border-top:1px solid var(--line);background:var(--bg);font-size:var(--fs-md);white-space:pre-wrap}
+#v-pptx #pptOutline{flex:1;overflow:auto;padding:24px;max-width:820px;margin:0 auto;width:100%}
+#v-pptx #pptOutline h3{margin:18px 0 4px;font-size:var(--fs-lg)}#v-pptx #pptOutline p{margin:0 0 4px}
+#v-pptx #pptNum{width:58px;text-align:center;padding:4px 6px}
+#pptMain:fullscreen,#v-pptx #pptMain:fullscreen{background:#000}

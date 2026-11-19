@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Workspace</title>
+<script>try{var p=JSON.parse(localStorage.getItem('theme')||'"system"');document.documentElement.dataset.theme=(p==='dark'||(p==='system'&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/annotations.css') }}">
+<link rel="stylesheet" href="/pygments.css">
+{% for n in ['mat', 'json', 'md', 'sql', 'code', 'pdf', 'office', 'study'] %}<link rel="stylesheet" href="{{ url_for('static', filename='css/' ~ n ~ '.css') }}">
+{% endfor %}
+</head>
+<body>
+<button class="skip" id="skipBtn">Skip to content</button>
+<nav id="nav" aria-label="Main navigation">
+  <div class="nav-head">
+    <div class="brand" title="Home"><span class="logo">N</span><span>Study Workspace</span></div>
+    <button class="icon-btn" id="navToggle" title="Hide sidebar (Ctrl/Cmd+B)" aria-label="Collapse navigation"><i data-icon="panel"></i></button>
+  </div>
+  <div class="nav-scroll">
+    <div class="nav-sep"><span>Workspace</span></div>
+    <a class="nav-item" href="#/" data-match="/" data-also="/browse"><i data-icon="home"></i><span>Home</span></a>
+    <a class="nav-item" href="#/recent" data-match="/recent"><i data-icon="clock"></i><span>Recent</span></a>
+    <a class="nav-item" href="#/library/modified" data-match="/library"><i data-icon="library"></i><span>Library</span></a>
+    <a class="nav-item" href="#/library/favorites" data-match="/library/favorites"><i data-icon="star"></i><span>Favorites</span></a>
+    <a class="nav-item" href="#/library/collections" data-match="/library/collections"><i data-icon="folder"></i><span>Collections</span></a>
+    <div class="nav-sep"><span>Study</span></div>
+    <a class="nav-item" href="#/subjects" data-match="/subjects"><i data-icon="book"></i><span>Subjects</span></a>
+    <a class="nav-item" href="#/notes" data-match="/notes"><i data-icon="note"></i><span>Notes</span></a>
+    <a class="nav-item" href="#/annotations" data-match="/annotations"><i data-icon="highlighter"></i><span>Annotations</span></a>
+    <a class="nav-item" href="#/annotations/bookmarks" data-match="/annotations/bookmarks"><i data-icon="bookmark"></i><span>Bookmarks</span></a>
+    <div class="nav-sep"><span>Tools</span></div>
+    <a class="nav-item" href="#/planner" data-match="/planner"><i data-icon="calendar"></i><span>Planner</span></a>
+    <a class="nav-item" href="#/toolkit" data-match="/toolkit"><i data-icon="tools"></i><span>Toolkit</span></a>
+  </div>
+  <div class="nav-foot">
+    <a class="minitimer" id="miniTimer" href="#/planner" hidden title="Focus timer"><i data-icon="timer"></i><span id="miniTime">25:00</span></a>
+    <a class="nav-item" href="#/settings" data-match="/settings"><i data-icon="settings"></i><span>Settings</span></a>
+  </div>
+</nav>
+
+<main id="main" tabindex="-1">
+  <div id="docbar" hidden></div>
+  <div id="page" tabindex="-1"></div>
+  {% for v in ['mat', 'json', 'md', 'sql', 'code', 'pdf', 'image', 'docx', 'pptx'] %}{% include 'partials/' ~ v ~ '.html' %}{% endfor %}
+  <section class="vpane" id="v-external" hidden><div id="extBox" style="flex:1;display:flex"></div></section>
+</main>
+
+<div id="toast" aria-live="polite"></div>
+<script>window.ANN_CATS = {{ ann_cats|tojson }};</script>
+<script src="{{ url_for('static', filename='js/icons.js') }}"></script>
+<script src="{{ url_for('static', filename='js/util.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/annotations.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/study.js') }}"></script>
+<script src="{{ url_for('static', filename='js/planner.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reference.js') }}"></script>
+<script src="{{ url_for('static', filename='js/toolkit.js') }}"></script>
+<script src="{{ url_for('static', filename='js/palette.js') }}"></script>
+{% for n in ['mat', 'json', 'md', 'sql', 'code', 'pdf', 'image', 'docx', 'pptx'] %}<script src="{{ url_for('static', filename='js/' ~ n ~ '.js') }}"></script>
+{% endfor %}
+<script>App.init();</script>
+</body>
+</html>

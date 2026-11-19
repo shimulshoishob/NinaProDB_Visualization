@@ -1,0 +1,21 @@
+<section class="vpane" id="v-mat" hidden>
+      <div class="toolbar">
+        <span class="title" id="matName"></span><span class="badge" id="matMeta"></span>
+        <span class="spacer"></span>
+        <label style="color:var(--fg2)">Decimals <select id="dec"><option value="">auto</option><option>2</option><option selected>4</option><option>6</option></select></label>
+        <span style="color:var(--fg2)">Rows</span><input id="rFrom" type="number" min="1" placeholder="from" style="width:90px"><input id="rTo" type="number" min="1" placeholder="to" style="width:90px">
+        <button class="btn" id="csvBtn" title="Export the current sheet (optionally only the row range) as CSV">Export CSV</button>
+        <button class="btn" id="zipBtn" title="All sheets as a ZIP of CSV files">Export all (ZIP)</button>
+      </div>
+      <div class="formula"><input id="nameBox" readonly aria-label="Selected cell"><span class="fx">fx</span><input id="formulaBox" readonly aria-label="Cell value">
+        <span class="goto">Go to row <input id="gotoRow" type="number" min="1" placeholder="#"></span>
+        <button class="btn" id="panelBtn">Chart &amp; stats</button></div>
+      <div id="grid" tabindex="0"><div id="spacer"><div id="layer"></div></div></div>
+      <div id="panel" hidden>
+        <div class="toolbar"><div class="seg" id="ptabs"><button data-p="chart" class="active">Chart</button><button data-p="stats">Statistics</button></div>
+          <span id="chips2" class="chips2"></span><span class="spacer"></span>
+          <span class="badge" id="range"></span><button class="btn" id="resetZoom">Reset zoom</button></div>
+        <div id="pbody"></div>
+      </div>
+      <footer class="tabsbar"><div id="tabs"></div><div id="status"></div></footer>
+    </section>

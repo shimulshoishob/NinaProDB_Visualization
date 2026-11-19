@@ -1,0 +1,12 @@
+<section class="vpane" id="v-pptx" hidden>
+  <div class="toolbar">
+    <button class="icon-btn" id="pptPrev" title="Previous slide ( ← )" aria-label="Previous slide"><i data-icon="back"></i></button>
+    <input id="pptNum" type="number" min="1" value="1" aria-label="Slide number"><span class="badge" id="pptCount">/ 0</span>
+    <button class="icon-btn" id="pptNext" title="Next slide ( → )" aria-label="Next slide"><i data-icon="next"></i></button>
+    <span class="spacer"></span><span class="badge" id="pptInfo"></span>
+    <div class="seg" id="pptMode"><button data-m="slide" class="active">Slide</button><button data-m="outline">Outline</button></div>
+    <button class="btn ghost" id="pptNotes">Notes</button>
+    <button class="btn" id="pptPresent"><i data-icon="slides"></i>Present</button>
+  </div>
+  <div class="ppt-body"><aside id="pptList"></aside><div id="pptMain"><div id="pptStage"><div id="pptSlide"></div></div><div id="pptNoteBox" hidden></div></div></div>
+</section>

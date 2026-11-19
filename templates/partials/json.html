@@ -1,0 +1,17 @@
+<section class="vpane" id="v-json" hidden>
+      <div class="toolbar">
+        <span class="title" id="jsonName"></span><span class="badge" id="jsonMeta"></span>
+        <span class="spacer"></span>
+        <input id="q" type="search" placeholder="Search keys & values…  (Ctrl+F)" style="width:240px">
+        <span id="qInfo" class="badge" hidden></span>
+        <button class="icon-btn" id="qPrev" title="Previous match (Shift+Enter)">▲</button>
+        <button class="icon-btn" id="qNext" title="Next match (Enter)">▼</button>
+        <div class="seg" id="jsonModes"><button data-m="tree" class="active">Tree</button><button data-m="table">Table</button><button data-m="raw">Raw</button></div>
+        <button class="btn" id="expandBtn" title="Expand all (up to 2000 nodes)">Expand all</button>
+        <button class="btn" id="collapseBtn">Collapse</button>
+        <button class="btn" id="copyBtn">Copy JSON</button>
+        <button class="btn" id="dlBtn">Download</button>
+      </div>
+      <div id="pathBar"><span class="mono" id="pathText">$</span><button class="icon-btn" id="copyPath" title="Copy path">⧉</button></div>
+      <div id="body"></div>
+    </section>
